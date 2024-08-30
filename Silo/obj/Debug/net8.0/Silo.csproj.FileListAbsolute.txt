@@ -1,0 +1,6 @@
+C:\Users\matte\Documents\Università\A.A. 2324\Parallel and Distributed programming\distributedDeliveryOrleanss\Silo\obj\Debug\net8.0\Silo.csproj.AssemblyReference.cache
+C:\Users\matte\Documents\Università\A.A. 2324\Parallel and Distributed programming\distributedDeliveryOrleanss\Silo\obj\Debug\net8.0\Silo.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\matte\Documents\Università\A.A. 2324\Parallel and Distributed programming\distributedDeliveryOrleanss\Silo\obj\Debug\net8.0\Silo.AssemblyInfoInputs.cache
+C:\Users\matte\Documents\Università\A.A. 2324\Parallel and Distributed programming\distributedDeliveryOrleanss\Silo\obj\Debug\net8.0\Silo.AssemblyInfo.cs
+C:\Users\matte\Documents\Università\A.A. 2324\Parallel and Distributed programming\distributedDeliveryOrleanss\Silo\obj\Debug\net8.0\Silo.csproj.CoreCompileInputs.cache
+C:\Users\matte\Documents\Università\A.A. 2324\Parallel and Distributed programming\distributedDeliveryOrleanss\Silo\obj\Debug\net8.0\Silo.sourcelink.json

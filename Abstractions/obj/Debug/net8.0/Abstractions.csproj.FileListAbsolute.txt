@@ -1,0 +1,2 @@
+C:\Users\matte\Documents\Università\A.A. 2324\Parallel and Distributed programming\distributedDeliveryOrleanss\Abstractions\obj\Debug\net8.0\Abstractions.csproj.AssemblyReference.cache
+C:\Users\matte\Documents\Università\A.A. 2324\Parallel and Distributed programming\distributedDeliveryOrleanss\Abstractions\obj\Debug\net8.0\Abstractions.orleans.g.args.txt

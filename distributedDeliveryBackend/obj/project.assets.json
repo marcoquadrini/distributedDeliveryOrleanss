@@ -645,19 +645,19 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\marco\\.nuget\\packages\\": {}
+    "C:\\Users\\matte\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\marco\\Desktop\\parallel_programming\\distributedDeliveryBackend\\distributedDeliveryBackend.csproj",
+      "projectUniqueName": "C:\\Users\\matte\\Documents\\Università\\A.A. 2324\\Parallel and Distributed programming\\distributedDeliveryOrleanss\\distributedDeliveryBackend\\distributedDeliveryBackend.csproj",
       "projectName": "distributedDeliveryBackend",
-      "projectPath": "C:\\Users\\marco\\Desktop\\parallel_programming\\distributedDeliveryBackend\\distributedDeliveryBackend.csproj",
-      "packagesPath": "C:\\Users\\marco\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\marco\\Desktop\\parallel_programming\\distributedDeliveryBackend\\obj\\",
+      "projectPath": "C:\\Users\\matte\\Documents\\Università\\A.A. 2324\\Parallel and Distributed programming\\distributedDeliveryOrleanss\\distributedDeliveryBackend\\distributedDeliveryBackend.csproj",
+      "packagesPath": "C:\\Users\\matte\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\matte\\Documents\\Università\\A.A. 2324\\Parallel and Distributed programming\\distributedDeliveryOrleanss\\distributedDeliveryBackend\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\marco\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\matte\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
@@ -677,11 +677,6 @@
         "warnAsError": [
           "NU1605"
         ]
-      },
-      "restoreAuditProperties": {
-        "enableAudit": "true",
-        "auditLevel": "low",
-        "auditMode": "direct"
       }
     },
     "frameworks": {
@@ -720,7 +715,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.200/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.100/PortableRuntimeIdentifierGraph.json"
       }
     }
   }
