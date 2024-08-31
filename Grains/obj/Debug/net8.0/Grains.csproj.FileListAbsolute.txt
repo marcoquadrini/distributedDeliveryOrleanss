@@ -1,2 +1,0 @@
-C:\Users\matte\Documents\Università\A.A. 2324\Parallel and Distributed programming\distributedDeliveryOrleanss\Grains\obj\Debug\net8.0\Grains.csproj.AssemblyReference.cache
-C:\Users\matte\Documents\Università\A.A. 2324\Parallel and Distributed programming\distributedDeliveryOrleanss\Grains\obj\Debug\net8.0\Grains.orleans.g.args.txt

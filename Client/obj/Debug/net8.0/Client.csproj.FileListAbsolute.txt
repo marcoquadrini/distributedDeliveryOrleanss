@@ -1,6 +1,0 @@
-C:\Users\matte\Documents\Università\A.A. 2324\Parallel and Distributed programming\distributedDeliveryOrleanss\Client\obj\Debug\net8.0\Client.csproj.AssemblyReference.cache
-C:\Users\matte\Documents\Università\A.A. 2324\Parallel and Distributed programming\distributedDeliveryOrleanss\Client\obj\Debug\net8.0\Client.GeneratedMSBuildEditorConfig.editorconfig
-C:\Users\matte\Documents\Università\A.A. 2324\Parallel and Distributed programming\distributedDeliveryOrleanss\Client\obj\Debug\net8.0\Client.AssemblyInfoInputs.cache
-C:\Users\matte\Documents\Università\A.A. 2324\Parallel and Distributed programming\distributedDeliveryOrleanss\Client\obj\Debug\net8.0\Client.AssemblyInfo.cs
-C:\Users\matte\Documents\Università\A.A. 2324\Parallel and Distributed programming\distributedDeliveryOrleanss\Client\obj\Debug\net8.0\Client.csproj.CoreCompileInputs.cache
-C:\Users\matte\Documents\Università\A.A. 2324\Parallel and Distributed programming\distributedDeliveryOrleanss\Client\obj\Debug\net8.0\Client.sourcelink.json
