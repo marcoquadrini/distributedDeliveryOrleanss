@@ -1,0 +1,57 @@
+# Build results
+bin/
+obj/
+
+# Rider project files
+*.sln.iml
+.idea/
+*.sln.cache
+
+# NuGet
+*.nupkg
+*.snupkg
+.nuget/
+project.nuget.cache
+project.assets.json
+
+# Visual Studio Code
+.vscode/
+
+# Logs
+*.log
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Auto-generated MSBuild config files
+*.g.props
+*.g.targets
+*.dgspec.json
+
+# Build cache
+*.AssemblyInfo.cs
+*.AssemblyReference.cache
+*.CoreCompileInputs.cache
+*.csproj.FileListAbsolute.txt
+*.csproj.nuget.g.props
+
+# Source link
+*.sourcelink.json
+
+# Rider project model
+*.rider.project.model.nuget.info
+*.rider.project.restore.info
+
+# Debug build output
+Debug/
+
+# Application host
+apphost.exe
+
+# DLLs, executables, and symbols
+*.dll
+*.exe
+*.pdb
