@@ -1,6 +1,8 @@
+using distributedDeliveryBackend;
 using distributedDeliveryBackend.Dto;
 using distributedDeliveryBackend.EndPoints;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using StackExchange.Redis;
 
@@ -31,6 +33,10 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
     var configuration = builder.Configuration.GetSection("Redis:ConnectionString").Value;
     return ConnectionMultiplexer.Connect(configuration);
 });
+
+builder.Services.AddDbContext<ApplicationDbSqlContext>(options =>
+    options.UseMySql(builder.Configuration.GetConnectionString("MySql"), 
+        new MySqlServerVersion(new Version(8, 0, 21)))); 
 
 var app = builder.Build();
 
