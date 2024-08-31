@@ -13,11 +13,14 @@ services:
     ports:
       - "3306:3306"
     environment:
-      MYSQL_DATABASE: "order_db"
-      MYSQL_USER: "user"
-      MYSQL_PASSWORD: "distributedDeliverySql"
+      MYSQL_DATABASE: 'orderDb'
+      MYSQL_USER: 'user'
+      MYSQL_PASSWORD: 'password'
+      MYSQL_ROOT_PASSWORD: 'password'
+    expose:
+      - '3306'
     volumes:
-      - mysql_data:/var/lib/mysql
+      - my-db:/var/lib/mysql
 
 volumes:
-  mysql_data:
+  my-db:
