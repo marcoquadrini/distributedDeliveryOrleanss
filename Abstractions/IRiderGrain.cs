@@ -3,13 +3,13 @@ using Orleans;
 
 namespace Abstractions;
 
-public interface IDriverGrain : IGrainWithStringKey
+public interface IRiderGrain : IGrainWithStringKey
 {
     Task UpdateLocation(Location location);
 
     Task <Location> GetLocation(Location location);
 
-    Task AssignOrder(String orderKey);
+    Task AssignOrder(string orderId);
 
     Task<String> GetName();
 }

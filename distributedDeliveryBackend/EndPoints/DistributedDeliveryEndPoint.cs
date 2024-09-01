@@ -11,7 +11,7 @@ public static class DistributedDeliveryEndPoint
         app.MapGet("/provaGet", (String id) => { return "questo è l'id che mi passi" + id; })
             .WithOpenApi();
 
-        app.MapPost("/addOrder", async (ApplicationDbSqlContext mysql, [FromBody] AddOrderRequest data) =>
+        app.MapPost("/addOrder", async (OrderEventPublisher publisher,ApplicationDbSqlContext mysql, [FromBody] AddOrderRequest data) =>
             {
                 var order = new OrderDb();
                 order.Name = data.name;
@@ -23,6 +23,7 @@ public static class DistributedDeliveryEndPoint
 
                 mysql.orderDb.Add(order);
                 await mysql.SaveChangesAsync();
+                publisher.PublishOrderCreatedEvent(order);
                 return "Order added successfully";
             })
             .WithOpenApi();
@@ -31,6 +32,7 @@ public static class DistributedDeliveryEndPoint
             var newRider = new RiderDb(data.name, data.lastname, data.isWorking);
             mysql.riderDb.Add(newRider);
             await mysql.SaveChangesAsync();
+            
         });
 
         app.MapGet("/setWorkingRider", async(ApplicationDbSqlContext mysql, int idRider, bool isWorking) =>
@@ -41,7 +43,7 @@ public static class DistributedDeliveryEndPoint
                 rider.IsWorking = isWorking;
                 mysql.riderDb.Update(rider);
                 await mysql.SaveChangesAsync();
-                return "Set rider" + rider.Name + " " + rider.LastName + " Is working = " + rider.IsWorking;
+                return "Set rider " + rider.Name + " " + rider.LastName + " Is working = " + rider.IsWorking;
             }
             else
             {

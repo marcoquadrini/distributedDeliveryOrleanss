@@ -16,7 +16,7 @@ await host.StartAsync();
 
 IClusterClient client = host.Services.GetRequiredService<IClusterClient>();
 
-IDriverGrain driver = client.GetGrain<IDriverGrain>("prova");
+IRiderGrain driver = client.GetGrain<IRiderGrain>("prova");
 string response = await driver.GetName();
 
 Console.WriteLine($"""

@@ -17,10 +17,26 @@ services:
       MYSQL_USER: 'user'
       MYSQL_PASSWORD: 'distributedDeliverySql'
       MYSQL_ROOT_PASSWORD: 'password'
-    expose:
-      - '3306'
     volumes:
       - distributedDeliverySql:/var/lib/mysql
 
+  rabbitmq:
+    image: "rabbitmq:management"
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"      # Porta per il protocollo AMQP
+      - "15672:15672"    # Porta per l'interfaccia di gestione
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - backend
+
 volumes:
   distributedDeliverySql:
+  rabbitmq_data:
+
+networks:
+  backend:

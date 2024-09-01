@@ -1,3 +1,4 @@
+using Abstractions;
 using distributedDeliveryBackend;
 using distributedDeliveryBackend.Dto;
 using distributedDeliveryBackend.EndPoints;
@@ -28,15 +29,23 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
-{
-    var configuration = builder.Configuration.GetSection("Redis:ConnectionString").Value;
-    return ConnectionMultiplexer.Connect(configuration);
-});
 
 builder.Services.AddDbContext<ApplicationDbSqlContext>(options =>
     options.UseMySql(builder.Configuration.GetConnectionString("MySql"), 
-        new MySqlServerVersion(new Version(8, 0, 21)))); 
+        new MySqlServerVersion(new Version(8, 0, 21))));
+
+// Configura Orleans Client
+builder.Host.UseOrleansClient(clientBuilder =>
+{
+    clientBuilder.UseLocalhostClustering();
+});
+
+
+
+
+//Aggiunge il Publisher e il Subscriver di RabbitMq
+builder.Services.AddSingleton<OrderEventPublisher>();
+builder.Services.AddHostedService<OrderEventSubscriber>();
 
 var app = builder.Build();
 
@@ -50,7 +59,4 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.MapDistributedDeliveryEndpoints();
 
-
-
-app.Run();
-
+await app.RunAsync();

@@ -5,11 +5,11 @@ using Orleans;
 
 namespace Grains;
 
-public class DriverGrain : Grain, IDriverGrain
+public class RiderGrain : Grain, IRiderGrain
 {
     private readonly ILogger logger;
 
-    public DriverGrain(ILogger<DriverGrain> logger)
+    public RiderGrain(ILogger<RiderGrain> logger)
     {
         this.logger = logger;
     }

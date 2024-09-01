@@ -1,23 +1,22 @@
-﻿using Microsoft.Extensions.Hosting;
-using Orleans.Hosting;
-using Orleans.Runtime;
-using Orleans.Storage;
-using System.Diagnostics;
-using System.Net;
+﻿using System.Net;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 
-var host = Host.CreateDefaultBuilder()
-    .UseOrleans((ctx, silo) =>
+public class Program
+{
+    public static async Task Main(string[] args)
     {
-        silo.UseLocalhostClustering();
-        silo.UseDashboard();
+        var host = Host.CreateDefaultBuilder(args)
+            .UseOrleans(siloBuilder =>
+            {
+                siloBuilder.UseLocalhostClustering();
+            })
+            .ConfigureLogging(logging => { logging.AddConsole(); })
+            .Build();
+
+        await host.RunAsync();
     }
-    )
-    .Build();
+}
 
-await host.StartAsync();
-
-Console.WriteLine("Press any key to exit...");
-Console.ReadKey();
-
-await host.StopAsync();
