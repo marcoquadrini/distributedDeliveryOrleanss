@@ -16,6 +16,10 @@ public interface IRiderGrain : IGrainWithStringKey
     Task<bool> IsAvailable();
     
     Task<bool> IsWorking();
+    
+    Task SetWorking(bool working);
+
+    Task CompleteOrder();
 }
 
 

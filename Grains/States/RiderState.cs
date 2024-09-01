@@ -6,5 +6,5 @@ public class RiderState
     public string LastName { get; set; }
     public bool IsWorking { get; set; } = false;
     public bool IsAvailable { get; set; } = true;
-    public string AssignedOrders{ get; set; }
+    public string? AssignedOrder{ get; set; }
 }

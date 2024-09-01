@@ -6,4 +6,5 @@ public class CustomerState
     public string Name { get; set; }
     public string LastName { get; set; }
     public string Email { get; set; }
+    public List<string> Orders { get; set; } = new List<string>();
 }

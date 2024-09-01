@@ -32,7 +32,6 @@ namespace Grains
             var itemList = string.Join(", ", _orderState.State.ProductIds);
             return Task.FromResult(itemList);
         }
-
         public Task<Location> GetLocation()
         {
             throw new NotImplementedException();
@@ -43,14 +42,36 @@ namespace Grains
             return Task.FromResult(_orderState.State.Status);
         }
 
-        public Task AssignToRider(string riderId)
+        public async Task AssignToRider(string riderId)
         {
-               throw new NotImplementedException();
+            if (_orderState.State.Status != "Pending")
+                throw new Exception("Order is not in a pending state");
+
+            var riderGrain = GrainFactory.GetGrain<IRiderGrain>(riderId);
+            var isAvailable = await riderGrain.IsAvailable();
+        
+            if (!isAvailable)
+                throw new Exception("Rider is not available");
+
+            _orderState.State.RiderId = riderId;
+            _orderState.State.Status = "In Delivery";
+            await _orderState.WriteStateAsync();
+
+            await riderGrain.AssignOrder(this.GetPrimaryKeyString());
+            var deliveryGrain = GrainFactory.GetGrain<IDeliveryGrain>(this.GetPrimaryKeyString());
+            await deliveryGrain.StartDelivery(this.GetPrimaryKeyString(), riderId);
         }
 
-        public Task SetProducts(List<string> productIds)
+        public async Task SetProducts(List<string> productIds)
         {
-            throw new NotImplementedException();
+            _orderState.State.ProductIds = productIds;
+            await _orderState.WriteStateAsync();
+        }
+
+        public async Task UpdateStatus(string status)
+        {
+            _orderState.State.Status = status;
+            await _orderState.WriteStateAsync();
         }
 
         public Task SetLocation(Location location)

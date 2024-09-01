@@ -9,17 +9,23 @@ namespace Grains;
 public class RiderGrain : Grain, IRiderGrain
 {
     private readonly ILogger _logger;
-    private readonly RiderState _riderState;
+    private readonly IPersistentState<RiderState> _riderState;
 
-    public RiderGrain(ILogger<RiderGrain> logger, RiderState riderState)
+    public RiderGrain(ILogger<RiderGrain> logger, [PersistentState("Rider")] IPersistentState<RiderState> riderState)
     {
         _logger = logger;
         _riderState = riderState;
     }
 
-    public Task AssignOrder(string orderKey)
+    public async Task AssignOrder(string orderKey)
     {
-        throw new NotImplementedException();
+        if (!_riderState.State.IsAvailable)
+            throw new Exception("Rider is not available");
+
+        _riderState.State.AssignedOrder = orderKey;
+        _riderState.State.IsAvailable = false;
+        await _riderState.WriteStateAsync();
+        _logger.LogInformation($"Order {orderKey} assigned to rider {_riderState.State.Name}");
     }
 
     public Task<Location> GetLocation(Location location)
@@ -34,12 +40,28 @@ public class RiderGrain : Grain, IRiderGrain
 
     public Task<bool> IsAvailable()
     {
-        throw new NotImplementedException();
+        return Task.FromResult(_riderState.State.IsAvailable);
     }
 
     public Task<bool> IsWorking()
     {
-        throw new NotImplementedException();
+        return Task.FromResult(_riderState.State.IsWorking);
+    }
+
+    public async Task SetWorking(bool working)
+    {
+        _riderState.State.IsWorking = working;
+        await _riderState.WriteStateAsync();
+    }
+
+    public async Task CompleteOrder()
+    {
+        if (_riderState.State.AssignedOrder != "")
+        {
+            _riderState.State.AssignedOrder = null;
+            _riderState.State.IsAvailable = true;
+            await _riderState.WriteStateAsync();
+        }
     }
 
     public Task UpdateLocation(Location location)

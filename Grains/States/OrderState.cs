@@ -3,7 +3,7 @@
 public class OrderState
 {
     public List<string> ProductIds { get; set; } = new();
-    public string Status { get; set; }
+    public string Status { get; set; } = "Pending";
     public string RiderId { get; set; }
     public int CustomerId { get; set; }
     public DateTime CreatedAt { get; set; }

@@ -23,5 +23,7 @@ namespace Abstractions
         Task AssignToRider(string riderId);
 
         Task SetProducts(List<string> productIds);
+
+        Task UpdateStatus(string status);
     }
 }
