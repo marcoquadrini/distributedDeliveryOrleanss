@@ -6,33 +6,49 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Grains.States;
 
 namespace Grains
 {
     public class OrderGrain : Orleans.Grain, IOrderGrain
     {
         private readonly ILogger logger;
-        private String customerName;
-        private String customerSurname;
+        private readonly  IPersistentState<OrderState> _orderState;
 
-        public OrderGrain(ILogger<OrderGrain> logger, String customerName, String customerSurname)
+        public OrderGrain(ILogger<OrderGrain> logger, [PersistentState("Order")] IPersistentState<OrderState> state)
         {
             this.logger = logger;
-            this.customerName = customerName;
-            this.customerSurname = customerSurname;
+            _orderState = state;
         }
 
-        public Task AddItem(string item)
+        public async Task AddItem(string item)
         {
-            throw new NotImplementedException();
+            _orderState.State.ProductIds.Add(item);
+            await _orderState.WriteStateAsync();
         }
 
         public Task<string> GetItemList()
         {
-            throw new NotImplementedException();
+            var itemList = string.Join(", ", _orderState.State.ProductIds);
+            return Task.FromResult(itemList);
         }
 
         public Task<Location> GetLocation()
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<string> GetStatus()
+        {
+            return Task.FromResult(_orderState.State.Status);
+        }
+
+        public Task AssignToRider(string riderId)
+        {
+               throw new NotImplementedException();
+        }
+
+        public Task SetProducts(List<string> productIds)
         {
             throw new NotImplementedException();
         }

@@ -18,7 +18,7 @@ services:
       MYSQL_PASSWORD: 'distributedDeliverySql'
       MYSQL_ROOT_PASSWORD: 'password'
     volumes:
-      - distributedDeliverySql:/var/lib/mysql
+      - distributedDeliverySql1:/var/lib/mysql
 
   rabbitmq:
     image: "rabbitmq:management"
@@ -35,7 +35,7 @@ services:
       - backend
 
 volumes:
-  distributedDeliverySql:
+  distributedDeliverySql1:
   rabbitmq_data:
 
 networks:

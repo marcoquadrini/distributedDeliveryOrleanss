@@ -14,5 +14,14 @@ public class OrderAssignmentGrain : Grain, IOrderAssignmentGrain
         await riderGrain.AssignOrder(order);
         */
     }
-    
+
+    public Task StartDelivery(string orderId, string riderId)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task CompleteDelivery()
+    {
+        throw new NotImplementedException();
+    }
 }

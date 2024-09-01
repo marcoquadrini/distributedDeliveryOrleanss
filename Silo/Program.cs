@@ -1,7 +1,9 @@
 ﻿using System.Net;
+using Grains;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using StackExchange.Redis;
 
 
 public class Program
@@ -12,6 +14,11 @@ public class Program
             .UseOrleans(siloBuilder =>
             {
                 siloBuilder.UseLocalhostClustering();
+                siloBuilder.AddRedisGrainStorageAsDefault(options =>
+                {
+                    options.ConfigurationOptions = new ConfigurationOptions();
+                    options.ConfigurationOptions.EndPoints.Add("localhost", 6379);
+                });
             })
             .ConfigureLogging(logging => { logging.AddConsole(); })
             .Build();

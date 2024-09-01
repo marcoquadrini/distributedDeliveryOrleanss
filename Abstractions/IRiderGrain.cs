@@ -12,6 +12,10 @@ public interface IRiderGrain : IGrainWithStringKey
     Task AssignOrder(string orderId);
 
     Task<String> GetName();
+    
+    Task<bool> IsAvailable();
+    
+    Task<bool> IsWorking();
 }
 
 
