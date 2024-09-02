@@ -8,4 +8,5 @@ public class AddOrderRequest
     public string city { get; set; }
     public string zipCode { get; set; }
     public string idArticle { get; set; }
+  
 }

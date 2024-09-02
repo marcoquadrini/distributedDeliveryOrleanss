@@ -20,19 +20,26 @@ public static class DistributedDeliveryEndPoint
                 order.City = data.city;
                 order.ZipCode = data.zipCode;
                 order.IdArticle = data.idArticle;
-
+                order.Status = OrderStatus.PresoInCarico;
                 mysql.orderDb.Add(order);
                 await mysql.SaveChangesAsync();
                 publisher.PublishOrderCreatedEvent(order);
                 return "Order added successfully";
             })
             .WithOpenApi();
-        app.MapPost("/addNewRider", async (ApplicationDbSqlContext mysql, [FromBody] AddRiderRequest data) =>
+        
+        app.MapPost("/changeOrderStatus", async (OrderEventPublisher publisher,ApplicationDbSqlContext mysql, [FromBody] ChangeOrderStatusRequest request) =>
         {
-            var newRider = new RiderDb(data.name, data.lastname, data.isWorking);
-            mysql.riderDb.Add(newRider);
+            var orderToUpdate = await mysql.orderDb.FindAsync(request.idOrder);
+            if (orderToUpdate == null) 
+            {
+                return Results.Problem("Order not found", statusCode: 404);
+            }
+            orderToUpdate.Status = request.newOrderState;
+            mysql.orderDb.Update(orderToUpdate);
             await mysql.SaveChangesAsync();
-            
+            if(orderToUpdate.Status == OrderStatus.Annullato) publisher.PublishOrderDeletedEvent(orderToUpdate.Id);
+            return Results.Ok($"Order id: {orderToUpdate.IdArticle} updated to status {orderToUpdate.Status}");
         });
 
         app.MapGet("/setWorkingRider", async(ApplicationDbSqlContext mysql, int idRider, bool isWorking) =>

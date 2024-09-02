@@ -4,6 +4,8 @@ using distributedDeliveryBackend.Dto;
 using Newtonsoft.Json;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using distributedDeliveryBackend.Utils;
+using Constants = distributedDeliveryBackend.Utils.Constants;
 
 public class OrderEventSubscriber : BackgroundService
 {
@@ -18,7 +20,15 @@ public class OrderEventSubscriber : BackgroundService
         _connection = factory.CreateConnection();
         _channel = _connection.CreateModel();
 
-        _channel.QueueDeclare(queue: "order_queue",
+        // First queue for created order
+        _channel.QueueDeclare(queue: Constants.rabbitmq_order_created,
+            durable: false,
+            exclusive: false,
+            autoDelete: false,
+            arguments: null);
+
+        // Second queue for deleted order
+        _channel.QueueDeclare(queue: Constants.rabbitmq_order_deleted,
             durable: false,
             exclusive: false,
             autoDelete: false,
@@ -27,30 +37,54 @@ public class OrderEventSubscriber : BackgroundService
 
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var consumer = new EventingBasicConsumer(_channel);
-        consumer.Received += async (model, ea) =>
+        // Consumer first queue
+        var orderCreatedConsumer = new EventingBasicConsumer(_channel);
+        orderCreatedConsumer.Received += async (model, ea) =>
         {
             var body = ea.Body.ToArray();
             var message = Encoding.UTF8.GetString(body);
             var order = JsonConvert.DeserializeObject<OrderDb>(message);
 
-            // Log to verify execution
-            Console.WriteLine("Received message and now passing it to the correct grain");
+            // Log per verificare l'esecuzione
+            Console.WriteLine("Received order created message and now passing it to the correct grain");
 
             if (order == null) return;
-
             var grain = _grainFactory.GetGrain<IOrderAssignmentGrain>(order.Id);
             await grain.HandleOrderCreatedEvent(order.Id);
         };
 
-        _channel.BasicConsume(queue: "order_queue",
+        _channel.BasicConsume(queue: Constants.rabbitmq_order_created,
             autoAck: true,
-            consumer: consumer);
+            consumer: orderCreatedConsumer);
 
+        //  // Consumer second queue
+        var orderDeletedConsumer = new EventingBasicConsumer(_channel);
+        orderDeletedConsumer.Received += async (model, ea) =>
+        {
+            var body = ea.Body.ToArray();
+            var message = Encoding.UTF8.GetString(body);
+
+            try
+            {
+                var idOrder = int.Parse(message);
+                var grain = _grainFactory.GetGrain<IOrderAssignmentGrain>(idOrder);
+                /* await grain.HandleOrderUpdatedEvent(order.Id);
+                _channel.BasicConsume(queue: Constants.rabbitmq_order_deleted,
+                    autoAck: true,
+                    consumer: orderUpdatedConsumer); */
+                Console.WriteLine($"Order deleted id : {idOrder}");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Order not valid: {e.Message}");
+            }
+
+        };
         return Task.CompletedTask;
     }
 
-    public override void Dispose()
+
+public override void Dispose()
     {
         _channel.Close();
         _connection.Close();

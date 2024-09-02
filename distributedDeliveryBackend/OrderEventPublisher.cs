@@ -1,7 +1,9 @@
 ﻿using RabbitMQ.Client;
 using System.Text;
 using distributedDeliveryBackend.Dto;
+using distributedDeliveryBackend.Utils;
 using Newtonsoft.Json;
+using Constants = distributedDeliveryBackend.Utils.Constants;
 
 public class OrderEventPublisher
 {
@@ -10,11 +12,14 @@ public class OrderEventPublisher
 
     public OrderEventPublisher()
     {
-        var factory = new ConnectionFactory() { HostName = "localhost" };
+        var factory = new ConnectionFactory()
+        {
+            HostName = "localhost"
+        };
         _connection = factory.CreateConnection();
         _channel = _connection.CreateModel();
 
-        _channel.QueueDeclare(queue: "order_queue",
+        _channel.QueueDeclare(queue: Constants.rabbitmq_order_created,
             durable: false,
             exclusive: false,
             autoDelete: false,
@@ -27,7 +32,16 @@ public class OrderEventPublisher
         var body = Encoding.UTF8.GetBytes(message);
 
         _channel.BasicPublish(exchange: "",
-            routingKey: "order_queue",
+            routingKey: Constants.rabbitmq_order_created,
+            basicProperties: null,
+            body: body);
+    }
+    
+    public void PublishOrderDeletedEvent(int idOrder)
+    {
+        var body = Encoding.UTF8.GetBytes(idOrder.ToString());
+        _channel.BasicPublish(exchange: "",
+            routingKey: "order_deleted",
             basicProperties: null,
             body: body);
     }
