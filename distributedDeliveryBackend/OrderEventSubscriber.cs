@@ -57,28 +57,29 @@ public class OrderEventSubscriber : BackgroundService
             autoAck: true,
             consumer: orderCreatedConsumer);
 
-        //  // Consumer second queue
+        // Consumer second queue
         var orderDeletedConsumer = new EventingBasicConsumer(_channel);
         orderDeletedConsumer.Received += async (model, ea) =>
         {
             var body = ea.Body.ToArray();
             var message = Encoding.UTF8.GetString(body);
-
-            try
+            var changeOrderStatusRequest = JsonConvert.DeserializeObject<ChangeOrderStatusRequest>(message);
+            if (changeOrderStatusRequest != null)
             {
-                var idOrder = int.Parse(message);
-                var grain = _grainFactory.GetGrain<IOrderAssignmentGrain>(idOrder);
-                /* await grain.HandleOrderUpdatedEvent(order.Id);
-                _channel.BasicConsume(queue: Constants.rabbitmq_order_deleted,
-                    autoAck: true,
-                    consumer: orderUpdatedConsumer); */
-                Console.WriteLine($"Order deleted id : {idOrder}");
+                try
+                {
+                    var grain = _grainFactory.GetGrain<IOrderGrain>(changeOrderStatusRequest.idOrder.ToString());
+                    await grain.UpdateStatus(changeOrderStatusRequest.newOrderState.ToString());
+                    _channel.BasicConsume(queue: Constants.rabbitmq_order_deleted,
+                        autoAck: true,
+                        consumer: orderDeletedConsumer);
+                    Console.WriteLine($"Order deleted id : {changeOrderStatusRequest.idOrder}");
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Order not valid: {e.Message}");
+                }
             }
-            catch (Exception e)
-            {
-                Console.WriteLine($"Order not valid: {e.Message}");
-            }
-
         };
         return Task.CompletedTask;
     }

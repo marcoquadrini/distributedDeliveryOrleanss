@@ -30,9 +30,6 @@ public class OrderDb
     public string ZipCode { get; set; }
     
     [Required]
-    public OrderStatus Status { get; set; }  
-    
-    [Required]
     [StringLength(100)]
     public string IdArticle { get; set; }
 }

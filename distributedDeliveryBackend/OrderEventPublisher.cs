@@ -38,9 +38,10 @@ public class OrderEventPublisher
             body: body);
     }
 
-    public void PublishOrderDeletedEvent(int idOrder)
+    public void PublishOrderDeletedEvent(ChangeOrderStatusRequest request)
     {
-        var body = Encoding.UTF8.GetBytes(idOrder.ToString());
+        var message = JsonConvert.SerializeObject(request);
+        var body = Encoding.UTF8.GetBytes(message);
         _channel.BasicPublish(exchange: "",
             routingKey: "order_deleted",
             basicProperties: null,

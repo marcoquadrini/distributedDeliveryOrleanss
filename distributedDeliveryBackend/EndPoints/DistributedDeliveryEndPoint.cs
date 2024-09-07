@@ -8,9 +8,6 @@ public static class DistributedDeliveryEndPoint
 {
     public static WebApplication MapDistributedDeliveryEndpoints(this WebApplication app)
     {
-        app.MapGet("/provaGet", (String id) => { return "questo è l'id che mi passi" + id; })
-            .WithOpenApi();
-
         app.MapPost("/addOrder", async (OrderEventPublisher publisher,ApplicationDbSqlContext mysql, [FromBody] AddOrderRequest data) =>
             {
                 var order = new OrderDb();
@@ -20,7 +17,6 @@ public static class DistributedDeliveryEndPoint
                 order.City = data.city;
                 order.ZipCode = data.zipCode;
                 order.IdArticle = data.idArticle;
-                order.Status = OrderStatus.PresoInCarico;
                 mysql.orderDb.Add(order);
                 await mysql.SaveChangesAsync();
                 publisher.PublishOrderCreatedEvent(order);
@@ -28,18 +24,10 @@ public static class DistributedDeliveryEndPoint
             })
             .WithOpenApi();
         
-        app.MapPost("/changeOrderStatus", async (OrderEventPublisher publisher,ApplicationDbSqlContext mysql, [FromBody] ChangeOrderStatusRequest request) =>
+        app.MapPost("/changeOrderStatus", async (OrderEventPublisher publisher, [FromBody] ChangeOrderStatusRequest request) =>
         {
-            var orderToUpdate = await mysql.orderDb.FindAsync(request.idOrder);
-            if (orderToUpdate == null) 
-            {
-                return Results.Problem("Order not found", statusCode: 404);
-            }
-            orderToUpdate.Status = request.newOrderState;
-            mysql.orderDb.Update(orderToUpdate);
-            await mysql.SaveChangesAsync();
-            if(orderToUpdate.Status == OrderStatus.Annullato) publisher.PublishOrderDeletedEvent(orderToUpdate.Id);
-            return Results.Ok($"Order id: {orderToUpdate.IdArticle} updated to status {orderToUpdate.Status}");
+            publisher.PublishOrderDeletedEvent(request);
+            return Results.Ok($"Order id: {request.idOrder} updated to status {request.newOrderState}");
         });
 
         app.MapGet("/setWorkingRider", async(ApplicationDbSqlContext mysql, int idRider, bool isWorking) =>
