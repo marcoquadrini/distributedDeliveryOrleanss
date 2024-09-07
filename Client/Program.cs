@@ -16,42 +16,81 @@ await host.StartAsync();
 
 IClusterClient client = host.Services.GetRequiredService<IClusterClient>();
 
-IRiderGrain driver = client.GetGrain<IRiderGrain>("prova");
-string response = await driver.GetName();
+int customerCount = 5;
+        int riderCount = 3;
+        int ordersPerCustomer = 3; 
 
-// Simulating order creation
-var customerGrain = client.GetGrain<ICustomerGrain>("customer123");
-var orderId = await customerGrain.CreateOrder(new List<string>{"product1", "product2", "product3"});
-Console.WriteLine($"Order {orderId} created");
+        List<string> productCatalog = new List<string> { "pizza", "pasta", "hamburger", "sushi", "insalata", "poke" };
+        List<ICustomerGrain> customers = new List<ICustomerGrain>();
+        List<IRiderGrain> riders = new List<IRiderGrain>();
 
-// Simulating rider assignment
-var riderGrain = client.GetGrain<IRiderGrain>("rider789");
-var orderGrain = client.GetGrain<IOrderGrain>(orderId);
+        // Create customers and riders
+        for (int i = 1; i <= customerCount; i++)
+        {
+            var customer = client.GetGrain<ICustomerGrain>($"customer{i}");
+            customers.Add(customer);
+            Console.WriteLine($"Customer {i} created.");
+        }
 
-try
-{
-    await orderGrain.AssignToRider("rider789");
-    Console.WriteLine($"Order {orderId} assigned to rider789");
-}
-catch (Exception ex)
-{
-    Console.WriteLine($"Failed to assign order: {ex.Message}");
-}
+        for (int i = 1; i <= riderCount; i++)
+        {
+            var rider = client.GetGrain<IRiderGrain>($"rider{i}");
+            riders.Add(rider);
+            Console.WriteLine($"Rider {i} created.");
+            await rider.SetWorking(true);
+            await rider.SetAvailable(true);
+        }
 
-// Simulating delivery completion
-var deliveryGrain = client.GetGrain<IDeliveryGrain>(orderId);
-await deliveryGrain.CompleteDelivery();
-Console.WriteLine($"Order {orderId} delivered");
+        // Simulate placing orders and assigning riders
+        Random random = new Random();
+        List<string> orderIds = new List<string>();
 
-// Fetch order status
-var status = await customerGrain.GetOrderStatus(orderId);
-Console.WriteLine($"Order {orderId} status: {status}");
+        foreach (var customer in customers)
+        {
+            for (int j = 1; j <= ordersPerCustomer; j++)
+            {
+                // Randomly generate a list of products for the order
+                var orderItems = productCatalog.OrderBy(x => random.Next()).Take(3).ToList();
 
-Console.WriteLine($"""
-    {response}
+                // Simulate order creation
+                var orderId = await customer.CreateOrder(orderItems);
+                orderIds.Add(orderId);
+                Console.WriteLine($"Customer {customer.GetPrimaryKeyString()} created order {orderId} with items: {string.Join(", ", orderItems)}");
 
-    Press any key to exit...
-    """);
+                // Randomly assign a rider to the order
+                var randomRider = riders[random.Next(riders.Count)];
+                var orderGrain = client.GetGrain<IOrderGrain>(orderId);
+                try
+                {
+                    await orderGrain.AssignToRider(randomRider.GetPrimaryKeyString());
+                    Console.WriteLine($"Order {orderId} assigned to Rider {randomRider.GetPrimaryKeyString()}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Failed to assign order {orderId}: {ex.Message}");
+                }
+            }
+        }
+
+        // Simulate delivery completion for all orders
+        foreach (var orderId in orderIds)
+        {
+            var deliveryGrain = client.GetGrain<IDeliveryGrain>(orderId);
+            await Task.Delay(random.Next(10000, 30000)); // Simulate random delay for delivery
+
+            await deliveryGrain.CompleteDelivery();
+            Console.WriteLine($"Order {orderId} delivered.");
+        }
+
+        // Fetch and display order status for all customers
+        foreach (var customer in customers)
+        {
+            foreach (var orderId in orderIds)
+            {
+                var status = await customer.GetOrderStatus(orderId);
+                Console.WriteLine($"Order {orderId} status: {status}");
+            }
+        }
 
 Console.ReadKey();
 

@@ -35,7 +35,7 @@ public class RiderGrain : Grain, IRiderGrain
 
     public Task<string> GetName()
     {
-        return Task.FromResult("NOME PROVA");
+        return Task.FromResult(_riderState.State.Name);
     }
 
     public Task<bool> IsAvailable()
@@ -51,6 +51,12 @@ public class RiderGrain : Grain, IRiderGrain
     public async Task SetWorking(bool working)
     {
         _riderState.State.IsWorking = working;
+        await _riderState.WriteStateAsync();
+    }
+
+    public async Task SetAvailable(bool available)
+    {
+        _riderState.State.IsAvailable = available;
         await _riderState.WriteStateAsync();
     }
 
