@@ -1,4 +1,5 @@
 ﻿using Abstractions;
+using distributedDeliveryBackend;
 
 namespace Grains;
 
@@ -7,6 +8,13 @@ public class DeliveryGrain: Grain, IDeliveryGrain
     private string _orderId;
     private string _riderId;
 
+    /*private readonly OrderEventPublisher _publisher;
+
+    public DeliveryGrain(OrderEventPublisher orderEventPublisher)
+    {
+        _publisher = orderEventPublisher;
+    }*/
+        
     public Task StartDelivery(string orderId, string riderId)
     {
         _orderId = orderId;
@@ -17,6 +25,7 @@ public class DeliveryGrain: Grain, IDeliveryGrain
 
     public async Task CompleteDelivery()
     {
+        //_publisher.PublishOrderDeliveredEvent(_orderId);
         var orderGrain = GrainFactory.GetGrain<IOrderGrain>(_orderId);
         await orderGrain.UpdateStatus("Delivered");
 

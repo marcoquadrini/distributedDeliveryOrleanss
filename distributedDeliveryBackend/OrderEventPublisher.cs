@@ -1,9 +1,10 @@
-﻿using RabbitMQ.Client;
-using System.Text;
+﻿using System.Text;
 using distributedDeliveryBackend.Dto;
-using distributedDeliveryBackend.Utils;
 using Newtonsoft.Json;
+using RabbitMQ.Client;
 using Constants = distributedDeliveryBackend.Utils.Constants;
+
+namespace distributedDeliveryBackend;
 
 public class OrderEventPublisher
 {
@@ -36,12 +37,21 @@ public class OrderEventPublisher
             basicProperties: null,
             body: body);
     }
-    
+
     public void PublishOrderDeletedEvent(int idOrder)
     {
         var body = Encoding.UTF8.GetBytes(idOrder.ToString());
         _channel.BasicPublish(exchange: "",
             routingKey: "order_deleted",
+            basicProperties: null,
+            body: body);
+    }
+
+    public void PublishOrderDeliveredEvent(string idOrder)
+    {
+        var body = Encoding.UTF8.GetBytes($"Order Delivered Notification: Your order {idOrder} was succeasfully delivered");
+        _channel.BasicPublish(exchange: "",
+            routingKey: "order_delivered",
             basicProperties: null,
             body: body);
     }
