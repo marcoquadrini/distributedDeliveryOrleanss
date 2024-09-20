@@ -1,9 +1,8 @@
-﻿using System.Net;
-using Grains;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
+
+namespace Silo;
 
 public class Program
 {
@@ -25,4 +24,3 @@ public class Program
         await host.RunAsync();
     }
 }
-
