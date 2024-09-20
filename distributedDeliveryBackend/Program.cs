@@ -29,10 +29,11 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-
+/*
 builder.Services.AddDbContext<ApplicationDbSqlContext>(options =>
     options.UseMySql(builder.Configuration.GetConnectionString("MySql"), 
         new MySqlServerVersion(new Version(8, 0, 21))));
+        */
 
 // Configura Orleans Client
 builder.Host.UseOrleansClient(clientBuilder =>

@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using distributedDeliveryBackend.Dto;
 using Grains.States;
 
 namespace Grains
@@ -19,6 +20,13 @@ namespace Grains
         {
             this.logger = logger;
             _orderState = state;
+        }
+
+        public async Task<string> GetItem()
+        {
+            var app = Task.FromResult(_orderState.State); 
+            OrderState orderState = await app;
+            return orderState.ToString(); 
         }
 
         public async Task AddItem(string item)

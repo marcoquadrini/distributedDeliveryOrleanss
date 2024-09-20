@@ -1,16 +1,13 @@
 ﻿using Microsoft.CodeAnalysis;
-using Orleans;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace Abstractions
 {
     public interface IOrderGrain : IGrainWithStringKey
     {
         Task<string> GetItemList();
+
+        Task<string> GetItem();
 
         Task AddItem(String item);
 
@@ -26,4 +23,5 @@ namespace Abstractions
 
         Task UpdateStatus(string status);
     }
+    
 }

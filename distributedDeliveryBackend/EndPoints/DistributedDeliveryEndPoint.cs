@@ -1,14 +1,20 @@
-﻿using distributedDeliveryBackend.Dto;
+﻿using System.Text.Json;
+using Abstractions;
+using distributedDeliveryBackend.Dto;
 using Microsoft.AspNetCore.Mvc;
 using StackExchange.Redis;
+using Orleans;
+
 
 namespace distributedDeliveryBackend.EndPoints;
 
 public static class DistributedDeliveryEndPoint
 {
+
     public static WebApplication MapDistributedDeliveryEndpoints(this WebApplication app)
     {
-        app.MapPost("/addOrder", async (OrderEventPublisher publisher,ApplicationDbSqlContext mysql, [FromBody] AddOrderRequest data) =>
+        
+        app.MapPost("/addOrder", (OrderEventPublisher publisher, [FromBody] AddOrderRequest data) =>
             {
                 var order = new OrderDb();
                 order.Name = data.name;
@@ -17,34 +23,37 @@ public static class DistributedDeliveryEndPoint
                 order.City = data.city;
                 order.ZipCode = data.zipCode;
                 order.IdArticle = data.idArticle;
-                mysql.orderDb.Add(order);
-                await mysql.SaveChangesAsync();
                 publisher.PublishOrderCreatedEvent(order);
                 return "Order added successfully";
             })
             .WithOpenApi();
         
-        app.MapPost("/changeOrderStatus", async (OrderEventPublisher publisher, [FromBody] ChangeOrderStatusRequest request) =>
+        app.MapPost("/changeOrderStatus",  (OrderEventPublisher publisher, [FromBody] ChangeOrderStatusRequest request) =>
         {
             publisher.PublishOrderDeletedEvent(request);
             return Results.Ok($"Order id: {request.idOrder} updated to status {request.newOrderState}");
         });
 
-        app.MapGet("/setWorkingRider", async(ApplicationDbSqlContext mysql, int idRider, bool isWorking) =>
+        app.MapGet("/setWorkingRider", (int idRider, bool isWorking) =>
         {
-            var rider = mysql.riderDb.Find(idRider);
-            if (rider != null)
+            /*Gestire il set working rider*/    
+        });
+
+        app.MapGet("/getOrder", async (IGrainFactory grainFactory, string idOrder) =>
+        {
+            var orderGrain = grainFactory.GetGrain<IOrderGrain>(idOrder);
+            var orderJson = await orderGrain.GetItem();
+            return orderJson;
+            try
             {
-                rider.IsWorking = isWorking;
-                mysql.riderDb.Update(rider);
-                await mysql.SaveChangesAsync();
-                return "Set rider " + rider.Name + " " + rider.LastName + " Is working = " + rider.IsWorking;
+                OrderDto? order = JsonSerializer.Deserialize<OrderDto>(orderJson);
+                return order?.ToString();
             }
-            else
+            catch (JsonException ex)
             {
-                return "Rider not found, please check the rider id";
+                return ($"Errore nella deserializzazione: {ex.Message}");
             }
-            
+            return "something wrong";
         });
     return app;
     }
