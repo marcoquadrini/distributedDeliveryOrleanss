@@ -60,14 +60,17 @@ public class RiderGrain : Grain, IRiderGrain
 
     public async Task<bool> SetWorking(bool working)
     {
+        Console.WriteLine("Entro set Working");
         try
         {
+            Console.WriteLine("Entro set Working TRY ");
             _riderState.State.IsWorking = working;
+            await _riderState.WriteStateAsync();
             if (working)
                 await SetAvailable(true);
             else
                 await SetAvailable(false);
-            await _riderState.WriteStateAsync();
+            Console.WriteLine("Entro set Working FINITO TRY ");
             return true;
         }
         catch (Exception)
@@ -127,6 +130,7 @@ public class RiderGrain : Grain, IRiderGrain
         {
             var riderState = new RiderState(name, lastName, isWorking);
             _riderState.State = riderState;
+            _riderState.State.IsAvailable = false;
             await _riderState.WriteStateAsync();
             return true; 
         }
