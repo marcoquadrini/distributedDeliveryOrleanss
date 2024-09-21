@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Grains.Services;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
@@ -20,6 +21,12 @@ public class Program
                 });
                 siloBuilder.Services.AddHostedService<OrderEventSubscriber>();
                 siloBuilder.Services.AddHostedService<RiderEventSubscriber>();
+                siloBuilder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+                {
+                    var configuration = ConfigurationOptions.Parse("localhost:6379");
+                    return ConnectionMultiplexer.Connect(configuration);
+                });
+                siloBuilder.Services.AddSingleton<RiderAvailabilityService>();
             })
             .ConfigureLogging(logging => { logging.AddConsole(); })
             .Build();

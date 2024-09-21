@@ -67,7 +67,7 @@ namespace Grains
 
             await riderGrain.AssignOrder(this.GetPrimaryKeyString());
             var deliveryGrain = GrainFactory.GetGrain<IDeliveryGrain>(this.GetPrimaryKeyString());
-            await deliveryGrain.StartDelivery(this.GetPrimaryKeyString(), riderId);
+            await deliveryGrain.StartDelivery(this.GetPrimaryKeyString());
         }
 
         public async Task SetProducts(List<string> productIds)

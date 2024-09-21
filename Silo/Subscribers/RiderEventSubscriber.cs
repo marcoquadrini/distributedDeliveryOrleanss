@@ -39,10 +39,9 @@ public class RiderEventSubscriber : BackgroundService
             var body = ea.Body.ToArray();
             var message = Encoding.UTF8.GetString(body);
             var setWorkingRiderRequest = JsonConvert.DeserializeObject<SetWorkingRiderRequest>(message);
-            if (setWorkingRiderRequest != null) {
-                Console.WriteLine("MI è ARRIVATO IL MESSAGGINO");
-            }
-            
+            if(setWorkingRiderRequest == null) return;
+            var rider = _grainFactory.GetGrain<IRiderGrain>(setWorkingRiderRequest.RiderId);
+            await rider.SetWorking(setWorkingRiderRequest.IsWorking);
         };
         
         _channel.BasicConsume(queue: Constants.RabbitmqSetWorkingRider,

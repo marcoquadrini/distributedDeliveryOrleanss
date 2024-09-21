@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using Abstractions;
 using distributedDeliveryBackend.Dto;
+using distributedDeliveryBackend.Dto.Request;
 using Newtonsoft.Json;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
@@ -50,7 +51,8 @@ public class OrderEventSubscriber : BackgroundService
             Console.WriteLine("Received order created message and now passing it to the correct grain");
 
             if (order == null) return;
-            
+            var deliveryGrain = _grainFactory.GetGrain<IDeliveryGrain>(order.IdOrder);
+            await deliveryGrain.StartDelivery(order.IdOrder!);
         };
 
         _channel.BasicConsume(queue: Constants.rabbitmq_order_created,
@@ -68,12 +70,12 @@ public class OrderEventSubscriber : BackgroundService
             {
                 try
                 {
-                    var grain = _grainFactory.GetGrain<IOrderGrain>(changeOrderStatusRequest.idOrder.ToString());
-                    await grain.UpdateStatus(changeOrderStatusRequest.newOrderState.ToString());
+                    var grain = _grainFactory.GetGrain<IOrderGrain>(changeOrderStatusRequest.IdOrder.ToString());
+                    await grain.UpdateStatus(changeOrderStatusRequest.NewOrderState.ToString());
                     _channel.BasicConsume(queue: Constants.rabbitmq_order_deleted,
                         autoAck: true,
                         consumer: orderDeletedConsumer);
-                    Console.WriteLine($"Order deleted id : {changeOrderStatusRequest.idOrder}");
+                    Console.WriteLine($"Order deleted id : {changeOrderStatusRequest.IdOrder}");
                 }
                 catch (Exception e)
                 {

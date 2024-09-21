@@ -3,6 +3,7 @@ using Grains.States;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using Orleans;
+using StackExchange.Redis;
 
 namespace Grains;
 
@@ -10,11 +11,15 @@ public class RiderGrain : Grain, IRiderGrain
 {
     private readonly ILogger _logger;
     private readonly IPersistentState<RiderState> _riderState;
+    
+    private readonly IDatabase _redis;
+    private const string RedisAvailableRidersKey = "available_riders";
 
-    public RiderGrain(ILogger<RiderGrain> logger, [PersistentState("Rider")] IPersistentState<RiderState> riderState)
+    public RiderGrain(ILogger<RiderGrain> logger, [PersistentState("Rider")] IPersistentState<RiderState> riderState, IConnectionMultiplexer redisConnection)
     {
         _logger = logger;
         _riderState = riderState;
+        _redis = redisConnection.GetDatabase();
     }
     
      
@@ -51,9 +56,9 @@ public class RiderGrain : Grain, IRiderGrain
         {
             _riderState.State.IsWorking = working;
             if (working)
-                _riderState.State.IsAvailable = true;
+                await SetAvailable(true);
             else
-                _riderState.State.IsAvailable = false;
+                await SetAvailable(false);
             await _riderState.WriteStateAsync();
             return true;
         }
@@ -65,6 +70,15 @@ public class RiderGrain : Grain, IRiderGrain
 
     public async Task SetAvailable(bool available)
     {
+        var riderId = this.GetPrimaryKeyString();
+        if (available)
+        {
+            await _redis.SetAddAsync(RedisAvailableRidersKey, riderId);
+        }
+        else
+        {
+            await _redis.SetRemoveAsync(RedisAvailableRidersKey, riderId);
+        }
         _riderState.State.IsAvailable = available;
         await _riderState.WriteStateAsync();
     }

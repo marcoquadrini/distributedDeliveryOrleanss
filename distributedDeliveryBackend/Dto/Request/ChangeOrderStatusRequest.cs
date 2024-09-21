@@ -1,8 +1,8 @@
-﻿namespace distributedDeliveryBackend.Dto;
+﻿namespace distributedDeliveryBackend.Dto.Request;
 
 public class ChangeOrderStatusRequest
 {
-    public string idOrder { get; set; }
+    public string IdOrder { get; set; }
     
-    public OrderStatus newOrderState { get; set; }
+    public OrderStatus NewOrderState { get; set; }
 }

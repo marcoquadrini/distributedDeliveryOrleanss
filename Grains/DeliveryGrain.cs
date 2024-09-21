@@ -1,35 +1,56 @@
 ﻿using Abstractions;
 using distributedDeliveryBackend;
+using distributedDeliveryBackend.Dto;
+using Grains.Services;
+using Grains.States;
+using Microsoft.Extensions.Logging;
 
 namespace Grains;
 
-public class DeliveryGrain: Grain, IDeliveryGrain
+public class DeliveryGrain(
+    ILogger<RiderGrain> logger,
+    [PersistentState("Rider")] IPersistentState<DeliveryState> deliveryState,
+    RiderAvailabilityService riderAvailabilityService
+    )
+    : Grain, IDeliveryGrain
 {
-    private string _orderId;
-    private string _riderId;
+    private readonly ILogger _logger = logger;
+    private readonly RiderAvailabilityService _riderAvailabilityService = riderAvailabilityService;
 
-    /*private readonly OrderEventPublisher _publisher;
-
-    public DeliveryGrain(OrderEventPublisher orderEventPublisher)
+    public async Task StartDelivery(string orderId)
     {
-        _publisher = orderEventPublisher;
-    }*/
-        
-    public Task StartDelivery(string orderId, string riderId)
-    {
-        _orderId = orderId;
-        _riderId = riderId;
-        // Start delivery logic here, e.g., send a notification
-        return Task.CompletedTask;
+        deliveryState.State.OrderId = orderId;
+        await deliveryState.WriteStateAsync();
+        var orderGrain = GrainFactory.GetGrain<IOrderGrain>(orderId);
+        await ChooseRider();
+        await orderGrain.UpdateStatus(OrderStatus.InConsegna.ToString());
     }
 
     public async Task CompleteDelivery()
     {
-        //_publisher.PublishOrderDeliveredEvent(_orderId);
-        var orderGrain = GrainFactory.GetGrain<IOrderGrain>(_orderId);
-        await orderGrain.UpdateStatus("Delivered");
+        var orderGrain = GrainFactory.GetGrain<IOrderGrain>(deliveryState.State.OrderId);
+        await orderGrain.UpdateStatus(OrderStatus.Consegnato.ToString());
 
-        var riderGrain = GrainFactory.GetGrain<IRiderGrain>(_riderId);
+        var riderGrain = GrainFactory.GetGrain<IRiderGrain>(deliveryState.State.RiderId);
         await riderGrain.CompleteOrder();
+    }
+
+    public async Task ChooseRider()
+    {
+        //TODO FINIRE
+        var availableRiders = await _riderAvailabilityService.GetAvailableRiderIdsAsync();
+
+        if (availableRiders.Count == 0)
+        {
+            Console.WriteLine("No available riders found.");
+            return;
+        }
+
+        // Pick the first available rider (or use some selection algorithm)
+        var selectedRiderId = availableRiders.First();
+        deliveryState.State.RiderId = selectedRiderId;
+        await deliveryState.WriteStateAsync();
+
+        Console.WriteLine($"Assigning Order to Rider {selectedRiderId}");
     }
 }

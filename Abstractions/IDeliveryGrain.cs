@@ -2,8 +2,10 @@
 
 public interface IDeliveryGrain : IGrainWithStringKey
 {
-    Task StartDelivery(string orderId, string riderId);
+    Task StartDelivery(string orderId);
 
     Task CompleteDelivery();
-    
+
+    Task ChooseRider();
+
 }

@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using Abstractions;
 using distributedDeliveryBackend.Dto;
+using distributedDeliveryBackend.Dto.Request;
 using Microsoft.AspNetCore.Mvc;
 using StackExchange.Redis;
 using Orleans;
@@ -14,13 +15,12 @@ public static class DistributedDeliveryEndPoint
     private const string ordertag = "ORDER"; 
     public static WebApplication MapDistributedDeliveryEndpoints(this WebApplication app)
     {
-
-    
-   
+        
         app.MapPost("/addOrder", async (IGrainFactory grainFactory,OrderEventPublisher publisher, [FromBody] AddOrderRequest order) =>
             {
                 var customer = grainFactory.GetGrain<ICustomerGrain>(order.IdCustomer);
-                await customer.CreateOrder(order.IdArticles);
+                var orderId = await customer.CreateOrder(order.IdArticles);
+                order.IdOrder = orderId;
                 publisher.PublishOrderCreatedEvent(order);
                 return order.DeliveryDetails.Name;
             })
@@ -30,12 +30,12 @@ public static class DistributedDeliveryEndPoint
      
         app.MapPost("/changeOrderStatus", async (IGrainFactory grainFactory, OrderEventPublisher publisher, [FromBody] ChangeOrderStatusRequest request) =>
         {
-            var orderGrain = grainFactory.GetGrain<IOrderGrain>(request.idOrder);
-            var orderUpdatedSuccess = await orderGrain.UpdateStatus(request.newOrderState.ToString());
+            var orderGrain = grainFactory.GetGrain<IOrderGrain>(request.IdOrder);
+            var orderUpdatedSuccess = await orderGrain.UpdateStatus(request.NewOrderState.ToString());
             if (orderUpdatedSuccess)
             {
                 publisher.PublishOrderDeletedEvent(request);
-                return Results.Ok($"Order id: {request.idOrder} updated to status {request.newOrderState}");
+                return Results.Ok($"Order id: {request.IdOrder} updated to status {request.NewOrderState}");
             }
             return Results.Problem("Something went wrong updating the order status.");
         })
@@ -72,7 +72,8 @@ public static class DistributedDeliveryEndPoint
             })
             .WithTags(riderTag)
             .WithOpenApi();
-
+        
+        
         app.MapPost("/setWorkingRider", async (IGrainFactory grainFactory, RiderEventPublisher publisher,
                 [FromBody] SetWorkingRiderRequest request) =>
             {
@@ -88,7 +89,7 @@ public static class DistributedDeliveryEndPoint
             })
             .WithTags(riderTag)
             .WithOpenApi();
-
+        
         app.MapGet("/getIsWorking", async (IGrainFactory grainFactory, string idRider) =>
             {
                 var riderGrain = grainFactory.GetGrain<IRiderGrain>(idRider);

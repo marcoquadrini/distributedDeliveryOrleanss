@@ -1,6 +1,6 @@
 ﻿using Abstractions;
-using Orleans;
 
+namespace Grains;
 
 public class OrderAssignmentGrain : Grain, IOrderAssignmentGrain
 {
@@ -10,9 +10,9 @@ public class OrderAssignmentGrain : Grain, IOrderAssignmentGrain
         Console.WriteLine("Sono il grain che ha lo scopo di gestire l'ordine. Id ordine " +orderId);
         //Todo gestire la creazione del grain del rider
         /*
-        var riderGrain = GrainFactory.GetGrain<IRiderGrain>();
-        await riderGrain.AssignOrder(order);
-        */
+    var riderGrain = GrainFactory.GetGrain<IRiderGrain>();
+    await riderGrain.AssignOrder(order);
+    */
     }
 
     public Task StartDelivery(string orderId, string riderId)

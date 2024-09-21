@@ -7,6 +7,8 @@
         public DeliveryInfo DeliveryDetails { get; set; } 
         
         public List<string> IdArticles { get; set; }
+        
+        public string? IdOrder { get; set; }
 
         public class DeliveryInfo
         {

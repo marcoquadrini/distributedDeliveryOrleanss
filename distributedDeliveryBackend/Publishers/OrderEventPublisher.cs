@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using distributedDeliveryBackend.Dto;
+using distributedDeliveryBackend.Dto.Request;
 using Newtonsoft.Json;
 using RabbitMQ.Client;
 using Constants = distributedDeliveryBackend.Utils.Constants;
