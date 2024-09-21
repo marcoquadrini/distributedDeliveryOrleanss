@@ -53,6 +53,10 @@ public class RiderGrain : Grain, IRiderGrain
     public async Task SetWorking(bool working)
     {
         _riderState.State.IsWorking = working;
+        if (working)
+            _riderState.State.IsAvailable = true;
+        else
+            _riderState.State.IsAvailable = false;
         await _riderState.WriteStateAsync();
     }
 

@@ -49,10 +49,10 @@ public static class DistributedDeliveryEndPoint
             return "something wrong";
         });
         
-        app.MapPost("/registerRider", (OrderEventPublisher publisher, [FromBody] AddOrderRequest data) =>
+        app.MapPost("/registerRider", (RiderEventPublisher publisher, [FromBody] AddRiderRequest request) =>
             {
-                publisher.PublishOrderCreatedEvent(data);
-                return "Order added successfully";
+                publisher.PublishNewRiderEvent(request);
+                return "Sent publish rider message";
             })
             .WithOpenApi();
     return app;

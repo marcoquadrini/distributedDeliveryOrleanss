@@ -46,6 +46,7 @@ builder.Host.UseOrleansClient(clientBuilder =>
 
 //Aggiunge il Publisher e il Subscriber di RabbitMq
 builder.Services.AddSingleton<OrderEventPublisher>();
+builder.Services.AddSingleton<RiderEventPublisher>();
 
 var app = builder.Build();
 
