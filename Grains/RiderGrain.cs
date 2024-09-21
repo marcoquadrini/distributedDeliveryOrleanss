@@ -13,6 +13,7 @@ public class RiderGrain : Grain, IRiderGrain
     private readonly IPersistentState<RiderState> _riderState;
     
     private readonly IDatabase _redis;
+    
     private const string RedisAvailableRidersKey = "available_riders";
 
     public RiderGrain(ILogger<RiderGrain> logger, [PersistentState("Rider")] IPersistentState<RiderState> riderState, IConnectionMultiplexer redisConnection)
@@ -30,7 +31,7 @@ public class RiderGrain : Grain, IRiderGrain
             throw new Exception("Rider is not available");
 
         _riderState.State.AssignedOrder = orderKey;
-        _riderState.State.IsAvailable = false;
+        await SetAvailable(false);
         await _riderState.WriteStateAsync();
         _logger.LogInformation($"Order {orderKey} assigned to rider {_riderState.State.Name}");
     }
@@ -70,6 +71,7 @@ public class RiderGrain : Grain, IRiderGrain
 
     public async Task SetAvailable(bool available)
     {
+        Console.WriteLine("sono dentro set available");
         var riderId = this.GetPrimaryKeyString();
         if (available)
         {
@@ -77,6 +79,7 @@ public class RiderGrain : Grain, IRiderGrain
         }
         else
         {
+            Console.WriteLine("Provo ad eliminare");
             await _redis.SetRemoveAsync(RedisAvailableRidersKey, riderId);
         }
         _riderState.State.IsAvailable = available;
