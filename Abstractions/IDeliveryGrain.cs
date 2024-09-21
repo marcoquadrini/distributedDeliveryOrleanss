@@ -10,4 +10,5 @@ public interface IDeliveryGrain : IGrainWithStringKey
     
     Task<string?> ContinueDelivery();
 
+    Task<string> GetOrderId();
 }

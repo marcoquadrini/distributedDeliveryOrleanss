@@ -9,7 +9,7 @@ using StackExchange.Redis;
 
 namespace Grains;
 
-public class DeliveryGrain(ILogger<RiderGrain> logger, [PersistentState("Rider")] IPersistentState<DeliveryState> deliveryState, RiderAvailabilityService riderAvailabilityService, IConnectionMultiplexer redisConnection)
+public class DeliveryGrain(ILogger<RiderGrain> logger, [PersistentState("Delivery")] IPersistentState<DeliveryState> deliveryState, RiderAvailabilityService riderAvailabilityService, IConnectionMultiplexer redisConnection)
     : Grain, IDeliveryGrain
 {
     private readonly ILogger _logger = logger;
@@ -72,5 +72,10 @@ public class DeliveryGrain(ILogger<RiderGrain> logger, [PersistentState("Rider")
             return deliveryStarted;
         }
         return null;
+    }
+
+    public Task<string> GetOrderId()
+    {
+        return Task.FromResult(deliveryState.State.OrderId);
     }
 }

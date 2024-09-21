@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Data;
+using System.Text.Json;
 using Abstractions;
 using distributedDeliveryBackend.Dto;
 using distributedDeliveryBackend.Dto.Request;
@@ -98,6 +99,14 @@ public static class DistributedDeliveryEndPoint
                 return orderJson;
             })
             .WithTags(riderTag)
+            .WithOpenApi();
+
+        app.MapPost("/deliverOrder", async (IGrainFactory grainFactory, string idOrder) =>
+            {
+                var deliveryGrain = grainFactory.GetGrain<IDeliveryGrain>(idOrder);
+                await deliveryGrain.CompleteDelivery();
+                return "Order delivered";
+            }).WithTags(ordertag)
             .WithOpenApi();
         
         
