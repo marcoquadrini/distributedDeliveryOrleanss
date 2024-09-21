@@ -16,6 +16,8 @@ public class RiderGrain : Grain, IRiderGrain
         _logger = logger;
         _riderState = riderState;
     }
+    
+     
 
     public async Task AssignOrder(string orderKey)
     {
@@ -68,6 +70,14 @@ public class RiderGrain : Grain, IRiderGrain
             _riderState.State.IsAvailable = true;
             await _riderState.WriteStateAsync();
         }
+    }
+
+    public async Task SetInfo(string name, string lastName, bool isWorking )
+    {
+        var riderState = new RiderState(name, lastName, isWorking);
+        _riderState.State = riderState;
+        await _riderState.WriteStateAsync();
+
     }
 
     public Task UpdateLocation(Location location)

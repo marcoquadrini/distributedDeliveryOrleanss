@@ -17,7 +17,7 @@ public static class DistributedDeliveryEndPoint
         app.MapPost("/addOrder", (OrderEventPublisher publisher, [FromBody] AddOrderRequest data) =>
             {
                 publisher.PublishOrderCreatedEvent(data);
-                return "Order added successfully";
+                return data.DeliveryDetails.Name;
             })
             .WithOpenApi();
         

@@ -17,4 +17,14 @@ public class RiderState
     
     [Id(4)]
     public string? AssignedOrder{ get; set; }
+
+    public RiderState(string name, string lastName, bool isWorking)
+    {
+        Name = name;
+        LastName = lastName;
+        IsWorking = isWorking;
+        if (isWorking) IsAvailable = true;
+        else IsAvailable = false;
+        AssignedOrder = null;
+    }
 }

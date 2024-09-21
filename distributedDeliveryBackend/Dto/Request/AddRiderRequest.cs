@@ -2,7 +2,7 @@
 
 public class AddRiderRequest
 {
-    public string name { get; set; }
-    public string lastname { get; set; }
-    public bool isWorking { get; set; }
+    public string Name { get; set; }
+    public string Lastname { get; set; }
+    public bool IsWorking { get; set; }
 }

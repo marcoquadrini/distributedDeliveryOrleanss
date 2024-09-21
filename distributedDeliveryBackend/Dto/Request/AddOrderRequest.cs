@@ -2,27 +2,27 @@
 {
     public class AddOrderRequest
     {
-        public string idCustomer { get; set; } 
+        public string IdCustomer { get; set; } 
         
-        public DeliveryInfo deliveryDetails { get; set; } 
+        public DeliveryInfo DeliveryDetails { get; set; } 
         
-        public List<string> idArticles { get; set; }
+        public List<string> IdArticles { get; set; }
 
         public class DeliveryInfo
         {
-            public string name { get; set; }
-            public string lastName { get; set; }
-            public string address { get; set; }
-            public string city { get; set; }
-            public string zipCode { get; set; }
+            public string Name { get; set; }
+            public string LastName { get; set; }
+            public string Address { get; set; }
+            public string City { get; set; }
+            public string ZipCode { get; set; }
 
             public DeliveryInfo(string name, string lastName, string address, string city, string zipCode)
             {
-                this.name = name;
-                this.lastName = lastName;
-                this.address = address;
-                this.city = city;
-                this.zipCode = zipCode;
+                Name = name;
+                LastName = lastName;
+                Address = address;
+                City = city;
+                ZipCode = zipCode;
             }
             
         }

@@ -5,6 +5,7 @@ namespace Abstractions;
 
 public interface IRiderGrain : IGrainWithStringKey
 {
+    Task SetInfo(string name, string lastName, bool isWorking);
     Task UpdateLocation(Location location);
 
     Task <Location> GetLocation(Location location);

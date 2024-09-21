@@ -51,8 +51,8 @@ public class OrderEventSubscriber : BackgroundService
 
             if (order == null) return;
             
-            var customer = _grainFactory.GetGrain<ICustomerGrain>(order.idCustomer);
-            var orderId = await customer.CreateOrder(order.idArticles);
+            var customer = _grainFactory.GetGrain<ICustomerGrain>(order.IdCustomer);
+            var orderId = await customer.CreateOrder(order.IdArticles);
             
             //var grainOrderAssignment = _grainFactory.GetGrain<IOrderAssignmentGrain>();
             //await grainOrderAssignment.HandleOrderCreatedEvent(2);
@@ -86,6 +86,7 @@ public class OrderEventSubscriber : BackgroundService
                 }
             }
         };
+        
         return Task.CompletedTask;
     }
 
