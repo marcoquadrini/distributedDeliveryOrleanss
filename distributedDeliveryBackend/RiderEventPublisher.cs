@@ -25,6 +25,11 @@ public class RiderEventPublisher
             exclusive: false,
             autoDelete: false,
             arguments: null);
+        _channel.QueueDeclare(queue: Constants.RabbitmqSetWorkingRider,
+            durable: false,
+            exclusive: false,
+            autoDelete: false,
+            arguments: null);
     }
 
     public void PublishNewRiderEvent(AddRiderRequest rider)
@@ -34,6 +39,17 @@ public class RiderEventPublisher
 
         _channel.BasicPublish(exchange: "",
             routingKey: Constants.RabbitmqNewRider,
+            basicProperties: null,
+            body: body);
+    }
+    
+    public void PublishSetWorkingRider(SetWorkingRiderRequest rider)
+    {
+        var message = JsonConvert.SerializeObject(rider);
+        var body = Encoding.UTF8.GetBytes(message);
+
+        _channel.BasicPublish(exchange: "",
+            routingKey: Constants.RabbitmqSetWorkingRider,
             basicProperties: null,
             body: body);
     }

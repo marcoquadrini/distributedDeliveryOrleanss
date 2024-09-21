@@ -19,6 +19,7 @@ public class Program
                     options.ConfigurationOptions.EndPoints.Add("localhost", 6379);
                 });
                 siloBuilder.Services.AddHostedService<OrderEventSubscriber>();
+                siloBuilder.Services.AddHostedService<RiderEventSubscriber>();
             })
             .ConfigureLogging(logging => { logging.AddConsole(); })
             .Build();

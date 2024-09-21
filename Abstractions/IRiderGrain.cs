@@ -5,11 +5,8 @@ namespace Abstractions;
 
 public interface IRiderGrain : IGrainWithStringKey
 {
-    Task SetInfo(string name, string lastName, bool isWorking);
-    Task UpdateLocation(Location location);
-
-    Task <Location> GetLocation(Location location);
-
+    Task<bool> SetInfo(string name, string lastName, bool isWorking);
+    
     Task AssignOrder(string orderId);
 
     Task<String> GetName();
@@ -18,7 +15,7 @@ public interface IRiderGrain : IGrainWithStringKey
     
     Task<bool> IsWorking();
     
-    Task SetWorking(bool working);
+    Task<bool> SetWorking(bool working);
     
     Task SetAvailable(bool available);
 

@@ -21,9 +21,9 @@ public class RiderEventSubscriber : BackgroundService
         var factory = new ConnectionFactory() { HostName = "localhost" };
         _connection = factory.CreateConnection();
         _channel = _connection.CreateModel();
-
         
-        _channel.QueueDeclare(queue: Constants.RabbitmqNewRider,
+        
+        _channel.QueueDeclare(queue: Constants.RabbitmqSetWorkingRider,
             durable: false,
             exclusive: false,
             autoDelete: false,
@@ -32,23 +32,23 @@ public class RiderEventSubscriber : BackgroundService
 
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var riderConsumer = new EventingBasicConsumer(_channel);
-        riderConsumer.Received += async (model, ea) =>
+        
+        var setWorkingRider = new EventingBasicConsumer(_channel);
+        setWorkingRider.Received += async (model, ea) =>
         {
             var body = ea.Body.ToArray();
             var message = Encoding.UTF8.GetString(body);
-            var riderStateJson = JsonConvert.DeserializeObject<AddRiderRequest>(message);
-            if (riderStateJson != null)
-            {
-                var riderGrain = _grainFactory.GetGrain<IRiderGrain>(Guid.NewGuid().ToString());
-                riderGrain.SetInfo(riderStateJson.Name, riderStateJson.Lastname, riderStateJson.IsWorking);
+            var setWorkingRiderRequest = JsonConvert.DeserializeObject<SetWorkingRiderRequest>(message);
+            if (setWorkingRiderRequest != null) {
+                Console.WriteLine("MI è ARRIVATO IL MESSAGGINO");
             }
             
         };
         
-        _channel.BasicConsume(queue: Constants.RabbitmqNewRider,
+        _channel.BasicConsume(queue: Constants.RabbitmqSetWorkingRider,
             autoAck: true,
-            consumer: riderConsumer);
+            consumer: setWorkingRider);
+        
         return Task.CompletedTask;
     }
 

@@ -51,11 +51,6 @@ public class OrderEventSubscriber : BackgroundService
 
             if (order == null) return;
             
-            var customer = _grainFactory.GetGrain<ICustomerGrain>(order.IdCustomer);
-            var orderId = await customer.CreateOrder(order.IdArticles);
-            
-            //var grainOrderAssignment = _grainFactory.GetGrain<IOrderAssignmentGrain>();
-            //await grainOrderAssignment.HandleOrderCreatedEvent(2);
         };
 
         _channel.BasicConsume(queue: Constants.rabbitmq_order_created,

@@ -47,6 +47,7 @@ public class OrderEventPublisher
             basicProperties: null,
             body: body);
     }
+    
 
     public void PublishOrderDeliveredEvent(string idOrder)
     {

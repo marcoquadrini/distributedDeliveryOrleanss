@@ -21,7 +21,7 @@ namespace Abstractions
 
         Task SetProducts(List<string> productIds);
 
-        Task UpdateStatus(string status);
+        Task<bool> UpdateStatus(string status);
     }
     
 }

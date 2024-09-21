@@ -29,15 +29,10 @@ public class RiderGrain : Grain, IRiderGrain
         await _riderState.WriteStateAsync();
         _logger.LogInformation($"Order {orderKey} assigned to rider {_riderState.State.Name}");
     }
-
-    public Task<Location> GetLocation(Location location)
-    {
-        throw new NotImplementedException();
-    }
-
+    
     public Task<string> GetName()
     {
-        return Task.FromResult(_riderState.State.Name);
+        return Task.FromResult(_riderState.State.Name + " " + _riderState.State.LastName);
     }
 
     public Task<bool> IsAvailable()
@@ -50,14 +45,22 @@ public class RiderGrain : Grain, IRiderGrain
         return Task.FromResult(_riderState.State.IsWorking);
     }
 
-    public async Task SetWorking(bool working)
+    public async Task<bool> SetWorking(bool working)
     {
-        _riderState.State.IsWorking = working;
-        if (working)
-            _riderState.State.IsAvailable = true;
-        else
-            _riderState.State.IsAvailable = false;
-        await _riderState.WriteStateAsync();
+        try
+        {
+            _riderState.State.IsWorking = working;
+            if (working)
+                _riderState.State.IsAvailable = true;
+            else
+                _riderState.State.IsAvailable = false;
+            await _riderState.WriteStateAsync();
+            return true;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
     }
 
     public async Task SetAvailable(bool available)
@@ -76,16 +79,20 @@ public class RiderGrain : Grain, IRiderGrain
         }
     }
 
-    public async Task SetInfo(string name, string lastName, bool isWorking )
+    public async Task<bool> SetInfo(string name, string lastName, bool isWorking)
     {
-        var riderState = new RiderState(name, lastName, isWorking);
-        _riderState.State = riderState;
-        await _riderState.WriteStateAsync();
-
+        try
+        {
+            var riderState = new RiderState(name, lastName, isWorking);
+            _riderState.State = riderState;
+            await _riderState.WriteStateAsync();
+            return true; 
+        }
+        catch (Exception)
+        {
+            return false; 
+        }
     }
 
-    public Task UpdateLocation(Location location)
-    {
-        throw new NotImplementedException();
-    }
+    
 }

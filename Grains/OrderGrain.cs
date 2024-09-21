@@ -76,10 +76,18 @@ namespace Grains
             await _orderState.WriteStateAsync();
         }
 
-        public async Task UpdateStatus(string status)
+        public async Task<bool> UpdateStatus(string status)
         {
-            _orderState.State.Status = status;
-            await _orderState.WriteStateAsync();
+            try
+            {
+                _orderState.State.Status = status;
+                await _orderState.WriteStateAsync();
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
 
         public Task SetLocation(Location location)

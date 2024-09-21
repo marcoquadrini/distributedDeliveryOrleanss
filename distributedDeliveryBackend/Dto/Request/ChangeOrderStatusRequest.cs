@@ -2,7 +2,7 @@
 
 public class ChangeOrderStatusRequest
 {
-    public int idOrder { get; set; }
+    public string idOrder { get; set; }
     
     public OrderStatus newOrderState { get; set; }
 }
