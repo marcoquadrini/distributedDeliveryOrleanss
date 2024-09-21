@@ -43,14 +43,18 @@ public class OrderEventSubscriber : BackgroundService
         {
             var body = ea.Body.ToArray();
             var message = Encoding.UTF8.GetString(body);
-            var order = JsonConvert.DeserializeObject<OrderDb>(message);
+            var order = JsonConvert.DeserializeObject<AddOrderRequest>(message);
 
             // Log per verificare l'esecuzione
             Console.WriteLine("Received order created message and now passing it to the correct grain");
 
             if (order == null) return;
-            var grain = _grainFactory.GetGrain<IOrderAssignmentGrain>(order.Id);
-            await grain.HandleOrderCreatedEvent(order.Id);
+            
+            var customer = _grainFactory.GetGrain<ICustomerGrain>(order.idCustomer);
+            var orderId = await customer.CreateOrder(order.idArticles);
+            
+            //var grainOrderAssignment = _grainFactory.GetGrain<IOrderAssignmentGrain>();
+            //await grainOrderAssignment.HandleOrderCreatedEvent(2);
         };
 
         _channel.BasicConsume(queue: Constants.rabbitmq_order_created,

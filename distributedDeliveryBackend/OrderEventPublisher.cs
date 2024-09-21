@@ -27,7 +27,7 @@ public class OrderEventPublisher
             arguments: null);
     }
 
-    public void PublishOrderCreatedEvent(OrderDb order)
+    public void PublishOrderCreatedEvent(AddOrderRequest order)
     {
         var message = JsonConvert.SerializeObject(order);
         var body = Encoding.UTF8.GetBytes(message);
