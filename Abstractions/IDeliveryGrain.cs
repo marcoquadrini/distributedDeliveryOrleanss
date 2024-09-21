@@ -6,8 +6,8 @@ public interface IDeliveryGrain : IGrainWithStringKey
 
     Task CompleteDelivery();
 
-    Task<bool> ChooseRider();
+    Task<string?> ChooseRider();
     
-    Task ContinueDelivery();
+    Task<string?> ContinueDelivery();
 
 }

@@ -20,7 +20,7 @@ public class DeliveryGrain(ILogger<RiderGrain> logger, [PersistentState("Rider")
         await deliveryState.WriteStateAsync();
         var orderGrain = GrainFactory.GetGrain<IOrderGrain>(orderId);
         var deliveryStarted = await ChooseRider();
-        if(deliveryStarted)
+        if(deliveryStarted != null)
             await orderGrain.UpdateStatus(OrderStatus.InConsegna.ToString());
     }
 
@@ -33,7 +33,7 @@ public class DeliveryGrain(ILogger<RiderGrain> logger, [PersistentState("Rider")
         await riderGrain.CompleteOrder();
     }
 
-    public async Task<bool> ChooseRider()
+    public async Task<string?> ChooseRider()
     {
         var availableRiders = await riderAvailabilityService.GetAvailableRiderIdsAsync();
 
@@ -41,26 +41,36 @@ public class DeliveryGrain(ILogger<RiderGrain> logger, [PersistentState("Rider")
         {
             await _redis.SetAddAsync(Constants.RedisPendingDeliveriesKey, deliveryState.State.OrderId);
             Console.WriteLine("No available riders found.");
-            return false;
+            return null;
         }
         
         var selectedRiderId = availableRiders.First();
         Console.WriteLine($"Rider found: {selectedRiderId}");
         deliveryState.State.RiderId = selectedRiderId;
+        
+        
         var riderGrain = GrainFactory.GetGrain<IRiderGrain>(selectedRiderId);
         Console.WriteLine($"Rider found: {riderGrain.GetGrainId()}");
-        await riderGrain.AssignOrder(deliveryState.State.OrderId);
-        await deliveryState.WriteStateAsync();
+        Console.WriteLine($"Pending to delete : {deliveryState.State.OrderId}");
+        
+        
+        
         await _redis.SetRemoveAsync(Constants.RedisPendingDeliveriesKey, deliveryState.State.OrderId);
+        await deliveryState.WriteStateAsync();
+       
         Console.WriteLine($"Assigning Order to Rider {selectedRiderId}");
-        return true;
+        return deliveryState.State.OrderId;
     }
 
-    public async Task ContinueDelivery()
+    public async Task<string?> ContinueDelivery()
     {
         var orderGrain = GrainFactory.GetGrain<IOrderGrain>(deliveryState.State.OrderId);
         var deliveryStarted = await ChooseRider();
-        if(deliveryStarted)
+        if (deliveryStarted != null)
+        {
             await orderGrain.UpdateStatus(OrderStatus.InConsegna.ToString());
+            return deliveryStarted;
+        }
+        return null;
     }
 }

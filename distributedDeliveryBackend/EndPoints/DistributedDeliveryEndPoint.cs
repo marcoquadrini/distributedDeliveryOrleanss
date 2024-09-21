@@ -82,7 +82,7 @@ public static class DistributedDeliveryEndPoint
                 var setWorkingRiderSuccess = await riderGrain.SetWorking(request.IsWorking);
                 if (setWorkingRiderSuccess)
                 {
-                    publisher.PublishSetWorkingRider(request);
+                    //publisher.PublishSetWorkingRider(request);
                     return "Ok";
                 }
 
