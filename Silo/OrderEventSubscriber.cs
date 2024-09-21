@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using distributedDeliveryBackend.Utils;
+using Microsoft.Extensions.Hosting;
 using Constants = distributedDeliveryBackend.Utils.Constants;
 
 public class OrderEventSubscriber : BackgroundService

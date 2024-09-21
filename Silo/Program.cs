@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 
@@ -17,6 +18,7 @@ public class Program
                     options.ConfigurationOptions = new ConfigurationOptions();
                     options.ConfigurationOptions.EndPoints.Add("localhost", 6379);
                 });
+                siloBuilder.Services.AddHostedService<OrderEventSubscriber>();
             })
             .ConfigureLogging(logging => { logging.AddConsole(); })
             .Build();

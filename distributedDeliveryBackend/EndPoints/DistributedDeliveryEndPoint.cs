@@ -48,6 +48,13 @@ public static class DistributedDeliveryEndPoint
             }
             return "something wrong";
         });
+        
+        app.MapPost("/registerRider", (OrderEventPublisher publisher, [FromBody] AddOrderRequest data) =>
+            {
+                publisher.PublishOrderCreatedEvent(data);
+                return "Order added successfully";
+            })
+            .WithOpenApi();
     return app;
     }
 }
