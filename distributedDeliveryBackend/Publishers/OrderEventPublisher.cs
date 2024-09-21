@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 using RabbitMQ.Client;
 using Constants = distributedDeliveryBackend.Utils.Constants;
 
-namespace distributedDeliveryBackend;
+namespace distributedDeliveryBackend.Publishers;
 
 public class OrderEventPublisher
 {

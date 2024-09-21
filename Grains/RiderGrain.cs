@@ -1,5 +1,7 @@
 ﻿using Abstractions;
+using Grains.Services;
 using Grains.States;
+using Grains.Utils;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using Orleans;
@@ -13,25 +15,30 @@ public class RiderGrain : Grain, IRiderGrain
     private readonly IPersistentState<RiderState> _riderState;
     
     private readonly IDatabase _redis;
-    
-    private const string RedisAvailableRidersKey = "available_riders";
 
-    public RiderGrain(ILogger<RiderGrain> logger, [PersistentState("Rider")] IPersistentState<RiderState> riderState, IConnectionMultiplexer redisConnection)
+    private readonly PendingDeliveriesService _pendingDeliveriesService;
+
+    public RiderGrain(ILogger<RiderGrain> logger, [PersistentState("Rider")] IPersistentState<RiderState> riderState, IConnectionMultiplexer redisConnection, PendingDeliveriesService pendingDeliveriesService)
     {
         _logger = logger;
         _riderState = riderState;
         _redis = redisConnection.GetDatabase();
+        _pendingDeliveriesService = pendingDeliveriesService;
     }
     
-     
 
     public async Task AssignOrder(string orderKey)
     {
         if (!_riderState.State.IsAvailable)
+        {
+            Console.WriteLine("Rider unavailable");
             throw new Exception("Rider is not available");
-
+        }
+        Console.WriteLine("Assigning order");
         _riderState.State.AssignedOrder = orderKey;
+        Console.WriteLine("Order assigned, setting available to false");
         await SetAvailable(false);
+        Console.WriteLine("Set available to false");
         await _riderState.WriteStateAsync();
         _logger.LogInformation($"Order {orderKey} assigned to rider {_riderState.State.Name}");
     }
@@ -75,15 +82,19 @@ public class RiderGrain : Grain, IRiderGrain
         var riderId = this.GetPrimaryKeyString();
         if (available)
         {
-            await _redis.SetAddAsync(RedisAvailableRidersKey, riderId);
+            await _redis.SetAddAsync(Constants.RedisAvailableRidersKey, riderId);
         }
         else
         {
             Console.WriteLine("Provo ad eliminare");
-            await _redis.SetRemoveAsync(RedisAvailableRidersKey, riderId);
+            await _redis.SetRemoveAsync(Constants.RedisAvailableRidersKey, riderId);
         }
         _riderState.State.IsAvailable = available;
         await _riderState.WriteStateAsync();
+        if (_riderState.State.IsAvailable)
+        {
+            await CheckPendingDeliveries();
+        }
     }
 
     public async Task CompleteOrder()
@@ -93,6 +104,20 @@ public class RiderGrain : Grain, IRiderGrain
             _riderState.State.AssignedOrder = null;
             _riderState.State.IsAvailable = true;
             await _riderState.WriteStateAsync();
+        }
+    }
+
+    public async Task CheckPendingDeliveries()
+    {
+        Console.WriteLine("Cercando consegne in sospeso");
+        var pendingDeliveries = await _pendingDeliveriesService.GetPendingDeliveriesAsync();
+
+        if (pendingDeliveries.Count > 0)
+        {
+            Console.WriteLine("C'è una consegna in sospeso");
+            Console.WriteLine(pendingDeliveries.First());
+            var delivery = GrainFactory.GetGrain<IDeliveryGrain>(pendingDeliveries.First());
+            await delivery.ContinueDelivery();
         }
     }
 

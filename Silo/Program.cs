@@ -27,6 +27,7 @@ public class Program
                     return ConnectionMultiplexer.Connect(configuration);
                 });
                 siloBuilder.Services.AddSingleton<RiderAvailabilityService>();
+                siloBuilder.Services.AddSingleton<PendingDeliveriesService>();
             })
             .ConfigureLogging(logging => { logging.AddConsole(); })
             .Build();

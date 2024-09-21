@@ -3,19 +3,18 @@ using Constants = Grains.Utils.Constants;
 
 namespace Grains.Services;
 
-public class RiderAvailabilityService
+public class PendingDeliveriesService
 {
     private readonly IDatabase _redis;
 
-    public RiderAvailabilityService(IConnectionMultiplexer redisConnection)
+    public PendingDeliveriesService(IConnectionMultiplexer redisConnection)
     {
         _redis = redisConnection.GetDatabase();
     }
 
-    public async Task<List<string>> GetAvailableRiderIdsAsync()
+    public async Task<List<string>> GetPendingDeliveriesAsync()
     {
-        var riderIds = await _redis.SetMembersAsync(Constants.RedisAvailableRidersKey);
+        var riderIds = await _redis.SetMembersAsync(Constants.RedisPendingDeliveriesKey);
         return riderIds.Select(r => (string)r).ToList();
     }
-
 }

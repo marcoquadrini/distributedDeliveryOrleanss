@@ -20,6 +20,8 @@ public interface IRiderGrain : IGrainWithStringKey
     Task SetAvailable(bool available);
 
     Task CompleteOrder();
+
+    Task CheckPendingDeliveries();
 }
 
 
