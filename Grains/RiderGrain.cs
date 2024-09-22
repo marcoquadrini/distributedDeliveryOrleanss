@@ -29,7 +29,7 @@ public class RiderGrain : Grain, IRiderGrain
 
     public async Task AssignOrder(string orderKey)
     {
-        
+        Console.WriteLine("Entrato in AssignOrder di RiderGrain");
         if (!_riderState.State.IsAvailable)
         {
             Console.WriteLine("Rider unavailable");
@@ -97,6 +97,7 @@ public class RiderGrain : Grain, IRiderGrain
         await _riderState.WriteStateAsync();
         if (_riderState.State.IsAvailable)
         {
+            //Todo provare a spostarlo fuori da questa chiamata
             await CheckPendingDeliveries();
         }
     }
@@ -106,7 +107,11 @@ public class RiderGrain : Grain, IRiderGrain
         if (_riderState.State.AssignedOrder != "")
         {
             _riderState.State.AssignedOrder = null;
-            _riderState.State.IsAvailable = true;
+            if (_riderState.State.IsWorking)
+            {
+                await SetAvailable(true);
+                _riderState.State.IsAvailable = true;
+            }
             await _riderState.WriteStateAsync();
         }
     }
@@ -121,8 +126,9 @@ public class RiderGrain : Grain, IRiderGrain
             Console.WriteLine("C'è una consegna in sospeso");
             Console.WriteLine(pendingDeliveries.First());
             var delivery = GrainFactory.GetGrain<IDeliveryGrain>(pendingDeliveries.First());
-            var orderToAssing = await delivery.ContinueDelivery();
-            if (orderToAssing != null) AssignOrder(orderToAssing);
+            await delivery.ContinueDelivery();
+            //var orderToAssing = await delivery.ContinueDelivery();
+            //if (orderToAssing != null) AssignOrder(orderToAssing);
         }
     }
 

@@ -19,9 +19,10 @@ public class DeliveryGrain(ILogger<RiderGrain> logger, [PersistentState("Deliver
         deliveryState.State.OrderId = orderId;
         await deliveryState.WriteStateAsync();
         var orderGrain = GrainFactory.GetGrain<IOrderGrain>(orderId);
-        var deliveryStarted = await ChooseRider();
-        if(deliveryStarted != null)
-            await orderGrain.UpdateStatus(OrderStatus.InConsegna.ToString());
+        var selectedRiderId = await ChooseRider();
+        if (selectedRiderId != null)
+            await orderGrain.AssignToRider(selectedRiderId);
+        //await orderGrain.UpdateStatus(OrderStatus.InConsegna.ToString());
     }
 
     public async Task CompleteDelivery()
@@ -52,24 +53,21 @@ public class DeliveryGrain(ILogger<RiderGrain> logger, [PersistentState("Deliver
         var riderGrain = GrainFactory.GetGrain<IRiderGrain>(selectedRiderId);
         Console.WriteLine($"Rider found: {riderGrain.GetGrainId()}");
         Console.WriteLine($"Pending to delete : {deliveryState.State.OrderId}");
-        
-        
-        
+        //await riderGrain.AssignOrder(deliveryState.State.OrderId);
         await _redis.SetRemoveAsync(Constants.RedisPendingDeliveriesKey, deliveryState.State.OrderId);
         await deliveryState.WriteStateAsync();
        
         Console.WriteLine($"Assigning Order to Rider {selectedRiderId}");
-        return deliveryState.State.OrderId;
+        return selectedRiderId;
     }
 
     public async Task<string?> ContinueDelivery()
     {
         var orderGrain = GrainFactory.GetGrain<IOrderGrain>(deliveryState.State.OrderId);
-        var deliveryStarted = await ChooseRider();
-        if (deliveryStarted != null)
-        {
-            await orderGrain.UpdateStatus(OrderStatus.InConsegna.ToString());
-            return deliveryStarted;
+        var selectedRiderId = await ChooseRider();
+        if (selectedRiderId != null){
+            await orderGrain.AssignToRider(selectedRiderId);
+            return selectedRiderId;
         }
         return null;
     }

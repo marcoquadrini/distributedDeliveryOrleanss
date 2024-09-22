@@ -2,12 +2,13 @@
 using Abstractions;
 using distributedDeliveryBackend.Dto;
 using distributedDeliveryBackend.Dto.Request;
+using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
-using distributedDeliveryBackend.Utils;
-using Microsoft.Extensions.Hosting;
 using Constants = distributedDeliveryBackend.Utils.Constants;
+
+namespace Silo.Subscribers;
 
 public class OrderEventSubscriber : BackgroundService
 {
@@ -88,7 +89,7 @@ public class OrderEventSubscriber : BackgroundService
     }
 
 
-public override void Dispose()
+    public override void Dispose()
     {
         _channel.Close();
         _connection.Close();

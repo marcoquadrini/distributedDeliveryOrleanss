@@ -7,8 +7,6 @@ namespace Abstractions
     {
         Task<string> GetItemList();
 
-        Task<string> GetItem();
-
         Task AddItem(String item);
 
         Task SetLocation(Location location);

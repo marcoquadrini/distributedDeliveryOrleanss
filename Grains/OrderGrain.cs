@@ -22,13 +22,6 @@ namespace Grains
             _orderState = state;
         }
 
-        public async Task<string> GetItem()
-        {
-            var app = Task.FromResult(_orderState.State); 
-            OrderState orderState = await app;
-            return orderState.ToString(); 
-        }
-
         public async Task AddItem(string item)
         {
             _orderState.State.ProductIds.Add(item);
@@ -40,6 +33,7 @@ namespace Grains
             var itemList = string.Join(", ", _orderState.State.ProductIds);
             return Task.FromResult(itemList);
         }
+        
         public Task<Location> GetLocation()
         {
             throw new NotImplementedException();
@@ -50,24 +44,33 @@ namespace Grains
             return Task.FromResult(_orderState.State.Status);
         }
 
+        //TODO MODIFICARE
         public async Task AssignToRider(string riderId)
         {
-            if (_orderState.State.Status != "Pending")
-                throw new Exception("Order is not in a pending state");
+            //if (_orderState.State.Status != OrderStatus.Confermato.ToString())
+            //    throw new Exception("Order is not in a pending state");
 
+            Console.WriteLine($"Assegnando l'ordine al rider: {riderId}");
+            
             var riderGrain = GrainFactory.GetGrain<IRiderGrain>(riderId);
-            var isAvailable = await riderGrain.IsAvailable();
-        
+            
+            Console.WriteLine($"1Grain preso: {riderGrain.GetGrainId()}");
+            /*var isAvailable = await riderGrain.IsAvailable();
+
             if (!isAvailable)
+            {
+                Console.WriteLine("Rider is not available");
                 throw new Exception("Rider is not available");
-
+            }*/
+            Console.WriteLine($"2Grain preso: {riderGrain.GetGrainId()}");
             _orderState.State.RiderId = riderId;
-            _orderState.State.Status = "In Delivery";
+            _orderState.State.Status = OrderStatus.InConsegna.ToString();
+            Console.WriteLine($"Rider dell'ordine impostato: {riderId}, stato {_orderState.State.Status}");
             await _orderState.WriteStateAsync();
-
-            await riderGrain.AssignOrder(this.GetPrimaryKeyString());
-            var deliveryGrain = GrainFactory.GetGrain<IDeliveryGrain>(this.GetPrimaryKeyString());
-            await deliveryGrain.StartDelivery(this.GetPrimaryKeyString());
+            Console.WriteLine($"Per assegnare l'ordine al rider: {riderGrain.GetGrainId()}");
+            riderGrain.AssignOrder(this.GetPrimaryKeyString());
+            //var deliveryGrain = GrainFactory.GetGrain<IDeliveryGrain>(this.GetPrimaryKeyString());
+            //await deliveryGrain.StartDelivery(this.GetPrimaryKeyString());
         }
 
         public async Task SetProducts(List<string> productIds)
