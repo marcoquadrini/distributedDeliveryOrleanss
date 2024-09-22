@@ -14,71 +14,114 @@ namespace Silo.Subscribers;
 public class RiderEventSubscriber : BackgroundService
 {
     private readonly IGrainFactory _grainFactory;
-    private readonly IConnection _connection;
-    private readonly IModel _channel;
     private readonly ILogger<RiderEventSubscriber> _logger;
+    private IConnection? _connection;
+    private IModel? _channel;
 
     public RiderEventSubscriber(IGrainFactory grainFactory, ILogger<RiderEventSubscriber> logger)
     {
         _grainFactory = grainFactory;
         _logger = logger;
+    }
+
+    // Setup RabbitMQ connection and channel
+    private void InitializeRabbitMq()
+    {
         var factory = new ConnectionFactory() { HostName = "localhost" };
         _connection = factory.CreateConnection();
         _channel = _connection.CreateModel();
-        
-        
+
         _channel.QueueDeclare(queue: Constants.RabbitmqSetWorkingRider,
             durable: false,
             exclusive: false,
             autoDelete: false,
             arguments: null);
+
         _logger.LogInformation("RiderEventSubscriber initialized and queue declared.");
     }
 
-    protected override Task ExecuteAsync(CancellationToken stoppingToken)
+    private void StartConsumer()
     {
-        
-        var setWorkingRider = new EventingBasicConsumer(_channel);
-        setWorkingRider.Received += async (model, ea) =>
+        CreateConsumer(Constants.RabbitmqSetWorkingRider, ProcessSetWorkingRiderRequest);
+    }
+
+    
+    private void CreateConsumer(string queueName, Func<string, Task> processMessage)
+    {
+        var consumer = new EventingBasicConsumer(_channel);
+        consumer.Received += async (model, ea) =>
         {
             var body = ea.Body.ToArray();
             var message = Encoding.UTF8.GetString(body);
-            _logger.LogInformation("Received message from {Queue}: {Message}", Constants.RabbitmqSetWorkingRider, message);
+            _logger.LogInformation("Received message from {Queue}: {Message}", queueName, message);
 
             try
             {
-                var setWorkingRiderRequest = JsonConvert.DeserializeObject<SetWorkingRiderRequest>(message);
-                if (setWorkingRiderRequest == null)
-                {
-                    _logger.LogWarning("Received null or invalid SetWorkingRiderRequest from {Queue}", Constants.RabbitmqSetWorkingRider);
-                    return;
-                }
-
-                _logger.LogInformation("Processing SetWorkingRiderRequest for RiderId: {RiderId}", setWorkingRiderRequest.RiderId);
-
-                var rider = _grainFactory.GetGrain<IRiderGrain>(setWorkingRiderRequest.RiderId);
-                await rider.SetWorking(setWorkingRiderRequest.IsWorking);
-                
-                _logger.LogInformation("Rider {RiderId} working status updated to: {IsWorking}", setWorkingRiderRequest.RiderId, setWorkingRiderRequest.IsWorking);
+                await processMessage(message);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error while processing SetWorkingRiderRequest from {Queue}", Constants.RabbitmqSetWorkingRider);
+                _logger.LogError(ex, "Error processing message from {Queue}: {Message}", queueName, message);
             }
         };
+
+        _channel.BasicConsume(queue: queueName, autoAck: true, consumer: consumer);
+    }
+
+    // Process the Set Working Rider message
+    private async Task ProcessSetWorkingRiderRequest(string message)
+    {
+        var setWorkingRiderRequest = DeserializeMessage<SetWorkingRiderRequest>(message);
+
+        if (setWorkingRiderRequest == null)
+        {
+            _logger.LogWarning("Received null or invalid SetWorkingRiderRequest from {Queue}", Constants.RabbitmqSetWorkingRider);
+            return;
+        }
+
+        _logger.LogInformation("Processing SetWorkingRiderRequest for RiderId: {RiderId}", setWorkingRiderRequest.RiderId);
+
+        var riderGrain = _grainFactory.GetGrain<IRiderGrain>(setWorkingRiderRequest.RiderId);
+        await riderGrain.SetWorking(setWorkingRiderRequest.IsWorking);
         
-        _channel.BasicConsume(queue: Constants.RabbitmqSetWorkingRider,
-            autoAck: true,
-            consumer: setWorkingRider);
-        
+        _logger.LogInformation("Rider {RiderId} working status updated to: {IsWorking}", setWorkingRiderRequest.RiderId, setWorkingRiderRequest.IsWorking);
+    }
+
+    // Deserialize the message
+    private T? DeserializeMessage<T>(string message)
+    {
+        try
+        {
+            return JsonConvert.DeserializeObject<T>(message);
+        }
+        catch (JsonException ex)
+        {
+            _logger.LogError(ex, "Failed to deserialize message: {Message}", message);
+            return default;
+        }
+    }
+
+    
+    protected override Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        InitializeRabbitMq();
+        StartConsumer();
         return Task.CompletedTask;
     }
 
-
+    
     public override void Dispose()
     {
-        _channel.Close();
-        _connection.Close();
+        if (_channel?.IsOpen == true)
+        {
+            _channel.Close();
+        }
+
+        if (_connection?.IsOpen == true)
+        {
+            _connection.Close();
+        }
+
         base.Dispose();
     }
 }

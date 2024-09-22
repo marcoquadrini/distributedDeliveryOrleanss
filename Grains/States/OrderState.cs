@@ -7,7 +7,7 @@ namespace Grains.States;
 public class OrderState
 {
     [Id(0)]
-    public List<string> ProductIds { get; set; } = new();
+    public List<string> Products { get; set; } = new();
     
     [Id(1)]
     public string Status { get; set; } = OrderStatus.InSospeso.ToString();
@@ -32,8 +32,8 @@ public class OrderState
 
     public override string ToString()
     {
-        string productList = ProductIds != null && ProductIds.Any() 
-            ? string.Join(", ", ProductIds) 
+        string productList = Products != null && Products.Any() 
+            ? string.Join(", ", Products) 
             : "No products";
 
         return $"OrderState: \n" +

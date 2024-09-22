@@ -5,11 +5,11 @@ namespace Grains;
 
 public class CustomerGrain : Grain<CustomerState>, ICustomerGrain
 {
-    public async Task<string> CreateOrder(List<string> productIds)
+    public async Task<string> CreateOrder(List<string> products)
     {
         var orderId = $"{this.GetPrimaryKeyString()}-{Guid.NewGuid()}";
         var orderGrain = GrainFactory.GetGrain<IOrderGrain>(orderId);
-        await orderGrain.SetProducts(productIds);
+        await orderGrain.SetProducts(products);
         return orderId;
     }
     

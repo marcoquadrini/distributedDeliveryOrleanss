@@ -1,10 +1,10 @@
 ﻿namespace Abstractions;
 
-/**
- * Represents a customer that can place orders
- */
+/// <summary>
+/// Represents a customer that can place orders
+/// </summary>
 public interface ICustomerGrain : IGrainWithStringKey
 {
-    Task<string> CreateOrder(List<string> productIds);
+    Task<string> CreateOrder(List<string> products);
     
 }

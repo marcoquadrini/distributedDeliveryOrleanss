@@ -1,11 +1,7 @@
 ﻿using Abstractions;
 using Grains.Services;
 using Grains.States;
-using Grains.Utils;
-using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
-using Orleans;
-using StackExchange.Redis;
 
 namespace Grains;
 
@@ -14,19 +10,18 @@ public class RiderGrain : Grain, IRiderGrain
     private readonly ILogger _logger;
     private readonly IPersistentState<RiderState> _riderState;
     
-    private readonly IDatabase _redis;
-
+    private readonly RiderAvailabilityService _riderAvailabilityService;
     private readonly PendingDeliveriesService _pendingDeliveriesService;
 
-    public RiderGrain(ILogger<RiderGrain> logger, [PersistentState("Rider")] IPersistentState<RiderState> riderState, IConnectionMultiplexer redisConnection, PendingDeliveriesService pendingDeliveriesService)
+
+    public RiderGrain(ILogger<RiderGrain> logger, [PersistentState("Rider")] IPersistentState<RiderState> riderState, RiderAvailabilityService riderAvailabilityService, PendingDeliveriesService pendingDeliveriesService)
     {
         _logger = logger;
         _riderState = riderState;
-        _redis = redisConnection.GetDatabase();
+        _riderAvailabilityService = riderAvailabilityService;
         _pendingDeliveriesService = pendingDeliveriesService;
     }
     
-
     public async Task AssignOrder(string orderKey)
     {
         _logger.LogInformation("Attempting to assign order {OrderKey} to rider {RiderId}", orderKey, this.GetPrimaryKeyString());
@@ -87,6 +82,10 @@ public class RiderGrain : Grain, IRiderGrain
         }
     }
 
+    /// <summary>
+    /// Moves the rider to the corresponding availability state, and checks for pending deliveries if it's true
+    /// </summary>
+    /// <param name="available">availability status</param>
     public async Task SetAvailable(bool available)
     {
         var riderId = this.GetPrimaryKeyString();
@@ -96,11 +95,11 @@ public class RiderGrain : Grain, IRiderGrain
         {
             if (available)
             {
-                await _redis.SetAddAsync(Constants.RedisAvailableRidersKey, riderId);
+                await _riderAvailabilityService.AddAvailableRiderAsync(riderId);;
             }
             else
             {
-                await _redis.SetRemoveAsync(Constants.RedisAvailableRidersKey, riderId);
+                await _riderAvailabilityService.RemoveAvailableRiderAsync(riderId);
             }
 
             _riderState.State.IsAvailable = available;

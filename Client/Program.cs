@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+﻿/*using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Abstractions;
@@ -21,7 +21,6 @@ List<string> productCatalog = new List<string> { "pizza", "pasta", "hamburger", 
 List<ICustomerGrain> customers = new List<ICustomerGrain>();
 List<IRiderGrain> riders = new List<IRiderGrain>();
 
-// Create customers and riders
 for (int i = 1; i <= customerCount; i++)
 {
     var customer = client.GetGrain<ICustomerGrain>($"customer{i}");
@@ -38,7 +37,6 @@ for (int i = 1; i <= riderCount; i++)
     await rider.SetAvailable(true);
 }
 
-// Simulate placing orders and assigning riders
 Random random = new Random();
 List<string> orderIds = new List<string>();
 
@@ -46,7 +44,6 @@ foreach (var customer in customers)
 {
     for (int j = 1; j <= ordersPerCustomer; j++)
     {
-        // Randomly generate a list of products for the order
         var orderItems = productCatalog.OrderBy(x => random.Next()).Take(3).ToList();
 
         // Simulate order creation
@@ -70,7 +67,6 @@ foreach (var customer in customers)
     }
 }
 
-// Simulate delivery completion for all orders
 foreach (var orderId in orderIds)
 {
     var deliveryGrain = client.GetGrain<IDeliveryGrain>(orderId);
@@ -80,7 +76,6 @@ foreach (var orderId in orderIds)
     Console.WriteLine($"Order {orderId} delivered.");
 }
 
-// Fetch and display order status for all customers
 foreach (var customer in customers)
 {
     foreach (var orderId in orderIds)
@@ -93,4 +88,4 @@ foreach (var customer in customers)
 Console.ReadKey();
 
 
-await host.StopAsync();
+await host.StopAsync();*/

@@ -11,7 +11,6 @@ using StackExchange.Redis;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -19,7 +18,7 @@ builder.Services.AddSwaggerGen(options =>
     {
         Version = "v1",
         Title = "Distributed Delivery",
-        Description = "A simple example ASP.NET Core Web API using Grains e Silos",
+        Description = "A Web Api for managing grains",
         
         Contact = new OpenApiContact
         {
@@ -28,24 +27,18 @@ builder.Services.AddSwaggerGen(options =>
         },
  
     });
+    options.EnableAnnotations();
 });
 
-/*
-builder.Services.AddDbContext<ApplicationDbSqlContext>(options =>
-    options.UseMySql(builder.Configuration.GetConnectionString("MySql"), 
-        new MySqlServerVersion(new Version(8, 0, 21))));
-        */
 
-// Configura Orleans Client
+// Configuring Orleans Client
 builder.Host.UseOrleansClient(clientBuilder =>
 {
     clientBuilder.UseLocalhostClustering();
 });
 
 
-
-
-//Aggiunge il Publisher e il Subscriber di RabbitMq
+// Adding RabbitMq Publishers
 builder.Services.AddSingleton<OrderEventPublisher>();
 builder.Services.AddSingleton<RiderEventPublisher>();
 

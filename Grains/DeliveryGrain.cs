@@ -1,20 +1,17 @@
 ﻿using Abstractions;
-using distributedDeliveryBackend;
-using distributedDeliveryBackend.Dto;
 using distributedDeliveryBackend.Dto.Enums;
 using Grains.Services;
 using Grains.States;
-using Grains.Utils;
 using Microsoft.Extensions.Logging;
-using StackExchange.Redis;
 
 namespace Grains;
 
-public class DeliveryGrain(ILogger<RiderGrain> logger, [PersistentState("Delivery")] IPersistentState<DeliveryState> deliveryState, RiderAvailabilityService riderAvailabilityService, IConnectionMultiplexer redisConnection)
+public class DeliveryGrain(ILogger<RiderGrain> logger, [PersistentState("Delivery")] IPersistentState<DeliveryState> deliveryState, RiderAvailabilityService riderAvailabilityService, PendingDeliveriesService pendingDeliveriesService)
     : Grain, IDeliveryGrain
 {
     private readonly ILogger _logger = logger;
-    private readonly IDatabase _redis = redisConnection.GetDatabase();
+    private readonly PendingDeliveriesService _pendingDeliveriesService = pendingDeliveriesService;
+
     public async Task StartDelivery(string orderId)
     {
         _logger.LogInformation("Starting delivery process for order {OrderId}", orderId);
@@ -76,7 +73,7 @@ public class DeliveryGrain(ILogger<RiderGrain> logger, [PersistentState("Deliver
             if (availableRiders.Count == 0)
             {
                 _logger.LogWarning("No available riders for order {OrderId}. Adding to pending deliveries.", deliveryState.State.OrderId);
-                await _redis.SetAddAsync(Constants.RedisPendingDeliveriesKey, deliveryState.State.OrderId);
+                await _pendingDeliveriesService.AddPendingDeliveryAsync(deliveryState.State.OrderId);
                 return null;
             }
 
@@ -86,7 +83,7 @@ public class DeliveryGrain(ILogger<RiderGrain> logger, [PersistentState("Deliver
             deliveryState.State.RiderId = selectedRiderId;
             _logger.LogInformation("Assigning order {OrderId} to rider {RiderId}", deliveryState.State.OrderId, selectedRiderId);
 
-            await _redis.SetRemoveAsync(Constants.RedisPendingDeliveriesKey, deliveryState.State.OrderId);
+            await _pendingDeliveriesService.RemovePendingDeliveryAsync(deliveryState.State.OrderId);
             await deliveryState.WriteStateAsync();
 
             _logger.LogInformation("Order {OrderId} assigned to rider {RiderId} and removed from pending deliveries.", deliveryState.State.OrderId, selectedRiderId);

@@ -1,4 +1,6 @@
-﻿namespace distributedDeliveryBackend.Dto.Request
+﻿using Swashbuckle.AspNetCore.Annotations;
+
+namespace distributedDeliveryBackend.Dto.Request
 {
     public class AddOrderRequest
     {
@@ -8,6 +10,7 @@
         
         public List<string> IdArticles { get; set; }
         
+        [SwaggerSchema(ReadOnly = true)]
         public string? IdOrder { get; set; }
 
         public class DeliveryInfo

@@ -1,12 +1,5 @@
 ﻿using Abstractions;
-using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using distributedDeliveryBackend.Dto;
 using distributedDeliveryBackend.Dto.Enums;
 using Grains.States;
 
@@ -28,7 +21,7 @@ namespace Grains
             try
             {
                 _logger.LogInformation("Adding item {Item} to order {OrderId}", item, this.GetPrimaryKeyString());
-                _orderState.State.ProductIds.Add(item);
+                _orderState.State.Products.Add(item);
                 await _orderState.WriteStateAsync();
                 _logger.LogInformation("Item {Item} added successfully to order {OrderId}", item, this.GetPrimaryKeyString());
             }
@@ -41,7 +34,7 @@ namespace Grains
 
         public Task<string> GetItemList()
         {
-            var itemList = string.Join(", ", _orderState.State.ProductIds);
+            var itemList = string.Join(", ", _orderState.State.Products);
             return Task.FromResult(itemList);
         }
 
@@ -50,6 +43,10 @@ namespace Grains
             return Task.FromResult(_orderState.State.Status);
         }
 
+        /// <summary>
+        /// Assigns this order to the corresponding rider
+        /// </summary>
+        /// <param name="riderId"></param>
         public async Task AssignToRider(string riderId)
         {
             _logger.LogInformation("Assigning order {OrderId} to rider {RiderId}", this.GetPrimaryKeyString(), riderId);
@@ -72,13 +69,13 @@ namespace Grains
             }
         }
 
-        public async Task SetProducts(List<string> productIds)
+        public async Task SetProducts(List<string> products)
         {
             try
             {
-                var productList = string.Join(", ", productIds);
+                var productList = string.Join(", ", products);
                 _logger.LogInformation("Setting product list for order {OrderId}: {ProductList}", this.GetPrimaryKeyString(), productList);
-                _orderState.State.ProductIds = productIds;
+                _orderState.State.Products = products;
                 await _orderState.WriteStateAsync();
             }
             catch (Exception ex)
