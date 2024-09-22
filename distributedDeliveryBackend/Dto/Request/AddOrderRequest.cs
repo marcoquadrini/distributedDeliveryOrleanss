@@ -1,4 +1,4 @@
-﻿namespace distributedDeliveryBackend.Dto
+﻿namespace distributedDeliveryBackend.Dto.Request
 {
     public class AddOrderRequest
     {

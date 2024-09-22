@@ -29,19 +29,27 @@ public class RiderGrain : Grain, IRiderGrain
 
     public async Task AssignOrder(string orderKey)
     {
-        Console.WriteLine("Entrato in AssignOrder di RiderGrain");
-        if (!_riderState.State.IsAvailable)
-        {
-            Console.WriteLine("Rider unavailable");
-            throw new Exception("Rider is not available");
-        }
-        Console.WriteLine("Assigning order");
-        _riderState.State.AssignedOrder = orderKey;
-        Console.WriteLine("Order assigned, setting available to false");
-        await SetAvailable(false);
-        Console.WriteLine("Set available to false");
-        await _riderState.WriteStateAsync();
-        _logger.LogInformation($"Order {orderKey} assigned to rider {_riderState.State.Name}");
+        _logger.LogInformation("Attempting to assign order {OrderKey} to rider {RiderId}", orderKey, this.GetPrimaryKeyString());
+
+            if (!_riderState.State.IsAvailable)
+            {
+                _logger.LogWarning("Rider {RiderId} is unavailable to take the order {OrderKey}", this.GetPrimaryKeyString(), orderKey);
+                throw new Exception("Rider is not available");
+            }
+
+            try
+            {
+                _logger.LogInformation("Assigning order {OrderKey} to rider {RiderId}", orderKey, this.GetPrimaryKeyString());
+                _riderState.State.AssignedOrder = orderKey;
+                await SetAvailable(false);
+                await _riderState.WriteStateAsync();
+                _logger.LogInformation("Order {OrderKey} successfully assigned to rider {RiderName} (ID: {RiderId})", orderKey, _riderState.State.Name, this.GetPrimaryKeyString());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to assign order {OrderKey} to rider {RiderId}", orderKey, this.GetPrimaryKeyString());
+                throw;
+            }
     }
     
     public Task<string> GetName()
@@ -61,74 +69,107 @@ public class RiderGrain : Grain, IRiderGrain
 
     public async Task<bool> SetWorking(bool working)
     {
-        Console.WriteLine("Entro set Working");
+        _logger.LogInformation("Setting working status to {WorkingStatus} for rider {RiderId}", working, this.GetPrimaryKeyString());
+
         try
         {
-            Console.WriteLine("Entro set Working TRY ");
             _riderState.State.IsWorking = working;
             await _riderState.WriteStateAsync();
-            if (working)
-                await SetAvailable(true);
-            else
-                await SetAvailable(false);
-            Console.WriteLine("Entro set Working FINITO TRY ");
+
+            await SetAvailable(working);
+            _logger.LogInformation("Successfully updated working status for rider {RiderId}", this.GetPrimaryKeyString());
             return true;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to update working status for rider {RiderId}", this.GetPrimaryKeyString());
             return false;
         }
     }
 
     public async Task SetAvailable(bool available)
     {
-        Console.WriteLine("sono dentro set available");
         var riderId = this.GetPrimaryKeyString();
-        if (available)
+        _logger.LogInformation("Setting availability to {Availability} for rider {RiderId}", available, riderId);
+
+        try
         {
-            await _redis.SetAddAsync(Constants.RedisAvailableRidersKey, riderId);
+            if (available)
+            {
+                await _redis.SetAddAsync(Constants.RedisAvailableRidersKey, riderId);
+            }
+            else
+            {
+                await _redis.SetRemoveAsync(Constants.RedisAvailableRidersKey, riderId);
+            }
+
+            _riderState.State.IsAvailable = available;
+            await _riderState.WriteStateAsync();
+
+            _logger.LogInformation("Rider {RiderId} availability updated to {Availability}", riderId, available);
+
+            if (available)
+            {
+                await CheckPendingDeliveries();
+            }
         }
-        else
+        catch (Exception ex)
         {
-            Console.WriteLine("Provo ad eliminare");
-            await _redis.SetRemoveAsync(Constants.RedisAvailableRidersKey, riderId);
-        }
-        _riderState.State.IsAvailable = available;
-        await _riderState.WriteStateAsync();
-        if (_riderState.State.IsAvailable)
-        {
-            //Todo provare a spostarlo fuori da questa chiamata
-            await CheckPendingDeliveries();
+            _logger.LogError(ex, "Error occurred while setting availability for rider {RiderId}", riderId);
+            throw;
         }
     }
 
     public async Task CompleteOrder()
     {
-        if (_riderState.State.AssignedOrder != "")
+        if (!string.IsNullOrEmpty(_riderState.State.AssignedOrder))
         {
-            _riderState.State.AssignedOrder = null;
-            if (_riderState.State.IsWorking)
+            try
             {
-                await SetAvailable(true);
-                _riderState.State.IsAvailable = true;
+                _riderState.State.AssignedOrder = null;
+
+                if (_riderState.State.IsWorking)
+                {
+                    await SetAvailable(true);
+                }
+                await _riderState.WriteStateAsync();
+                _logger.LogInformation("Rider {RiderId} has completed the order", this.GetPrimaryKeyString());
             }
-            await _riderState.WriteStateAsync();
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to complete the order for rider {RiderId}", this.GetPrimaryKeyString());
+                throw;
+            }
+        }
+        else
+        {
+            _logger.LogWarning("No assigned order found for rider {RiderId} to complete", this.GetPrimaryKeyString());
         }
     }
 
     public async Task CheckPendingDeliveries()
     {
-        Console.WriteLine("Cercando consegne in sospeso");
-        var pendingDeliveries = await _pendingDeliveriesService.GetPendingDeliveriesAsync();
-
-        if (pendingDeliveries.Count > 0)
+        _logger.LogInformation("Checking for pending deliveries");
+        try
         {
-            Console.WriteLine("C'è una consegna in sospeso");
-            Console.WriteLine(pendingDeliveries.First());
-            var delivery = GrainFactory.GetGrain<IDeliveryGrain>(pendingDeliveries.First());
-            await delivery.ContinueDelivery();
-            //var orderToAssing = await delivery.ContinueDelivery();
-            //if (orderToAssing != null) AssignOrder(orderToAssing);
+            var pendingDeliveries = await _pendingDeliveriesService.GetPendingDeliveriesAsync();
+
+            if (pendingDeliveries.Count > 0)
+            {
+                _logger.LogInformation("Found pending deliveries");
+
+                var delivery = GrainFactory.GetGrain<IDeliveryGrain>(pendingDeliveries.First());
+                await delivery.ContinueDelivery();
+            }
+            else
+            {
+                _logger.LogInformation("No pending deliveries found.");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while checking pending deliveries for rider {RiderId}", this.GetPrimaryKeyString());
+            throw;
         }
     }
 

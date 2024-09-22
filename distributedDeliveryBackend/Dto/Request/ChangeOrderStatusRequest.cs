@@ -1,4 +1,6 @@
-﻿namespace distributedDeliveryBackend.Dto.Request;
+﻿using distributedDeliveryBackend.Dto.Enums;
+
+namespace distributedDeliveryBackend.Dto.Request;
 
 public class ChangeOrderStatusRequest
 {

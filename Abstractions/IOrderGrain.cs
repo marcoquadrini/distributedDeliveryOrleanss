@@ -8,10 +8,6 @@ namespace Abstractions
         Task<string> GetItemList();
 
         Task AddItem(String item);
-
-        Task SetLocation(Location location);
-
-        Task<Location> GetLocation();
         
         Task<string> GetStatus();
         

@@ -1,4 +1,7 @@
-﻿namespace Grains.States;
+﻿using distributedDeliveryBackend.Dto;
+using distributedDeliveryBackend.Dto.Enums;
+
+namespace Grains.States;
 
 [GenerateSerializer]
 public class OrderState
@@ -7,7 +10,7 @@ public class OrderState
     public List<string> ProductIds { get; set; } = new();
     
     [Id(1)]
-    public string Status { get; set; } = "Pending";
+    public string Status { get; set; } = OrderStatus.InSospeso.ToString();
     
     [Id(2)]
     public string RiderId { get; set; }

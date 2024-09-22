@@ -85,8 +85,8 @@ foreach (var customer in customers)
 {
     foreach (var orderId in orderIds)
     {
-        var status = await customer.GetOrderStatus(orderId);
-        Console.WriteLine($"Order {orderId} status: {status}");
+        //var status = await customer.GetOrderStatus(orderId);
+        //Console.WriteLine($"Order {orderId} status: {status}");
     }
 }
 

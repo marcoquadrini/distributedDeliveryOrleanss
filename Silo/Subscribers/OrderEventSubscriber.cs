@@ -3,6 +3,7 @@ using Abstractions;
 using distributedDeliveryBackend.Dto;
 using distributedDeliveryBackend.Dto.Request;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
@@ -15,73 +16,97 @@ public class OrderEventSubscriber : BackgroundService
     private readonly IGrainFactory _grainFactory;
     private readonly IConnection _connection;
     private readonly IModel _channel;
+    private readonly ILogger<OrderEventSubscriber> _logger;
 
-    public OrderEventSubscriber(IGrainFactory grainFactory)
+    public OrderEventSubscriber(IGrainFactory grainFactory, ILogger<OrderEventSubscriber> logger)
     {
         _grainFactory = grainFactory;
+        _logger = logger;
         var factory = new ConnectionFactory() { HostName = "localhost" };
         _connection = factory.CreateConnection();
         _channel = _connection.CreateModel();
 
-        // First queue for created order
-        _channel.QueueDeclare(queue: Constants.rabbitmq_order_created,
+        // Queue for created orders
+        _channel.QueueDeclare(queue: Constants.RabbitmqOrderCreated,
             durable: false,
             exclusive: false,
             autoDelete: false,
             arguments: null);
 
-        // Second queue for deleted order
-        _channel.QueueDeclare(queue: Constants.rabbitmq_order_deleted,
+        // Queue for deleted orders
+        _channel.QueueDeclare(queue: Constants.RabbitmqOrderDeleted,
             durable: false,
             exclusive: false,
             autoDelete: false,
             arguments: null);
+        
+        _logger.LogInformation("OrderEventSubscriber initialized and queues declared.");
     }
 
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        // Consumer first queue
+        // Consumer for created orders
         var orderCreatedConsumer = new EventingBasicConsumer(_channel);
         orderCreatedConsumer.Received += async (model, ea) =>
         {
             var body = ea.Body.ToArray();
             var message = Encoding.UTF8.GetString(body);
-            var order = JsonConvert.DeserializeObject<AddOrderRequest>(message);
+            _logger.LogInformation("Received message from {Queue}: {Message}", Constants.RabbitmqOrderCreated, message);
 
-            // Log per verificare l'esecuzione
-            Console.WriteLine("Received order created message and now passing it to the correct grain");
-
-            if (order == null) return;
-            var deliveryGrain = _grainFactory.GetGrain<IDeliveryGrain>(order.IdOrder);
-            await deliveryGrain.StartDelivery(order.IdOrder!);
+            try
+            {
+                var order = JsonConvert.DeserializeObject<AddOrderRequest>(message);
+                if (order != null)
+                {
+                    _logger.LogInformation("Processing order created: {OrderId}", order.IdOrder);
+                    var deliveryGrain = _grainFactory.GetGrain<IDeliveryGrain>(order.IdOrder);
+                    await deliveryGrain.StartDelivery(order.IdOrder!);
+                    _logger.LogInformation("Order {OrderId} passed to the correct grain for delivery.", order.IdOrder);
+                }
+                else
+                {
+                    _logger.LogWarning("Received invalid or null order in {Queue}", Constants.RabbitmqOrderCreated);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while processing message from {Queue}: {Message}", Constants.RabbitmqOrderCreated, message);
+            }
         };
 
-        _channel.BasicConsume(queue: Constants.rabbitmq_order_created,
+        _channel.BasicConsume(queue: Constants.RabbitmqOrderCreated,
             autoAck: true,
             consumer: orderCreatedConsumer);
 
-        // Consumer second queue
+        // Consumer for deleted orders
         var orderDeletedConsumer = new EventingBasicConsumer(_channel);
         orderDeletedConsumer.Received += async (model, ea) =>
         {
             var body = ea.Body.ToArray();
             var message = Encoding.UTF8.GetString(body);
-            var changeOrderStatusRequest = JsonConvert.DeserializeObject<ChangeOrderStatusRequest>(message);
-            if (changeOrderStatusRequest != null)
+            _logger.LogInformation("Received message from {Queue}: {Message}", Constants.RabbitmqOrderDeleted, message);
+
+            try
             {
-                try
+                var changeOrderStatusRequest = JsonConvert.DeserializeObject<ChangeOrderStatusRequest>(message);
+                if (changeOrderStatusRequest != null)
                 {
                     var grain = _grainFactory.GetGrain<IOrderGrain>(changeOrderStatusRequest.IdOrder.ToString());
                     await grain.UpdateStatus(changeOrderStatusRequest.NewOrderState.ToString());
-                    _channel.BasicConsume(queue: Constants.rabbitmq_order_deleted,
+                    _logger.LogInformation("Order {OrderId} status updated to {NewStatus}.", changeOrderStatusRequest.IdOrder, changeOrderStatusRequest.NewOrderState);
+
+                    _channel.BasicConsume(queue: Constants.RabbitmqOrderDeleted,
                         autoAck: true,
                         consumer: orderDeletedConsumer);
-                    Console.WriteLine($"Order deleted id : {changeOrderStatusRequest.IdOrder}");
                 }
-                catch (Exception e)
+                else
                 {
-                    Console.WriteLine($"Order not valid: {e.Message}");
+                    _logger.LogWarning("Received invalid change order status request in {Queue}", Constants.RabbitmqOrderDeleted);
                 }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while processing message from {Queue}: {Message}", Constants.RabbitmqOrderDeleted, message);
             }
         };
         

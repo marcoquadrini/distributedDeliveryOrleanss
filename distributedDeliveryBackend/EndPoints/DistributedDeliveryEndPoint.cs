@@ -61,10 +61,8 @@ public static class DistributedDeliveryEndPoint
             })
         .WithTags(OrderTag)
         .WithOpenApi();
-
-
-        //TODO MIGLIORARE
-        app.MapGet("/getOrder", async (IGrainFactory grainFactory, ILogger<Program> logger, string idOrder) =>
+        
+        app.MapGet("/getOrderContents", async (IGrainFactory grainFactory, ILogger<Program> logger, string idOrder) =>
             {
                 try
                 {
